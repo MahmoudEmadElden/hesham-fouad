@@ -140,7 +140,7 @@
     return new Date(saved);
   }
 
-  function resetShift() {
+  async function resetShift() {
     const shiftStart = getShiftStart();
     const formattedShift = formatDateTimeArabic(shiftStart);
 
@@ -148,9 +148,6 @@
       `هل أنت متأكد من تصفير الوردية وبدء شيفت جديد؟\n\nالوردية السابقة بدأت: ${formattedShift}\n\nسيتم تصفير جميع العدادات وبدء حساب الأوردرات من اللحظة الحالية الآن.`
     );
     if (!confirmed) return;
-
-    const now = new Date();
-    localStorage.setItem(SHIFT_STORAGE_KEY, now.toISOString());
 
     // 1. Instantly zero-out all stat cards
     const elOrders = document.getElementById('statTotalOrders');
@@ -178,6 +175,16 @@
     // 3. Reset internal tracking & silence alerts
     isSwitchingPeriod = true;
     knownOrderIds.clear();
+
+    try {
+      const res = await window.HeshamFouadAPI.resetShift();
+      if (res && res.shiftStart) {
+        localStorage.setItem(SHIFT_STORAGE_KEY, res.shiftStart);
+      }
+    } catch (err) {
+      console.warn('Server shift reset fallback:', err);
+      localStorage.setItem(SHIFT_STORAGE_KEY, new Date().toISOString());
+    }
 
     updateShiftDisplay();
     setPeriod('shift');
@@ -247,7 +254,7 @@
   function getDateParams() {
     if (currentPeriod === 'shift') {
       const shiftStart = getShiftStart();
-      return { startDate: shiftStart.toISOString() };
+      return { period: 'shift', startDate: shiftStart.toISOString() };
     }
 
     if (currentPeriod === 'today') {
@@ -677,9 +684,18 @@
     if (refreshInterval) clearInterval(refreshInterval);
   }
 
-  function showDashboard() {
+  async function showDashboard() {
     if (loginScreen) loginScreen.style.display = 'none';
     if (dashboard) dashboard.style.display = 'block';
+
+    try {
+      const shiftData = await window.HeshamFouadAPI.getShift();
+      if (shiftData && shiftData.shiftStart) {
+        localStorage.setItem(SHIFT_STORAGE_KEY, shiftData.shiftStart);
+      }
+    } catch (e) {
+      console.warn('Could not sync shift from server:', e);
+    }
 
     updateShiftDisplay();
     loadOrders();
