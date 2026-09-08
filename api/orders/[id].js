@@ -1,3 +1,6 @@
+/**
+ * GET/PATCH /api/orders/[id] — Get or update order status for Hesham Fouad
+ */
 const { connectDB } = require('../_lib/db');
 const Order = require('../_lib/models/Order');
 const { verifyToken, requireRole, handleCors } = require('../_lib/auth-middleware');
@@ -30,7 +33,9 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === 'PATCH') {
-      requireRole(decoded, 'admin');
+      if (decoded.role !== 'admin' && decoded.role !== 'cashier') {
+        return res.status(403).json({ success: false, message: 'غير مصرح لك بتحديث حالة الطلب' });
+      }
 
       const { status } = req.body;
       const validStatuses = ['pending', 'accepted', 'preparing', 'ready', 'delivered', 'cancelled'];

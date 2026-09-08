@@ -1,3 +1,6 @@
+/**
+ * GET /api/orders/stats — Realtime Shift & Revenue stats for Hesham Fouad
+ */
 const { connectDB } = require('../_lib/db');
 const Order = require('../_lib/models/Order');
 const { verifyToken, requireRole, handleCors } = require('../_lib/auth-middleware');
@@ -11,7 +14,9 @@ module.exports = async function handler(req, res) {
 
   try {
     const decoded = verifyToken(req.headers.authorization);
-    requireRole(decoded, 'admin');
+    if (decoded.role !== 'admin' && decoded.role !== 'cashier') {
+      return res.status(403).json({ success: false, message: 'غير مصرح لك بالوصول' });
+    }
 
     await connectDB();
 

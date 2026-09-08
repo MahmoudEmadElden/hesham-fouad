@@ -1,3 +1,8 @@
+/**
+ * Admin & Cashier Dashboard Logic — Hesham Fouad King of Crepe
+ * Handles login, shift reset, date/time filtering, thermal ticket printing,
+ * password change, audio alerts, and real-time order polling.
+ */
 (function () {
   'use strict';
 
@@ -8,6 +13,7 @@
   const logoutBtn = document.getElementById('adminLogoutBtn');
   const ordersList = document.getElementById('adminOrdersList');
 
+  // Notification elements
   const soundBtn = document.getElementById('adminSoundBtn');
   const soundIcon = document.getElementById('soundIcon');
   const soundLabel = document.getElementById('soundLabel');
@@ -15,11 +21,13 @@
   let currentFilter = '';
   let refreshInterval = null;
 
+  // Shift & Date Range State
   const SHIFT_STORAGE_KEY = 'heshamFouadShiftStart';
   let currentPeriod = 'shift';
   let customStartDate = null;
   let customEndDate = null;
 
+  // DOM Elements for Shift & Period & Password
   const btnAdminPw = document.getElementById('btnAdminPw');
   const btnResetShift = document.getElementById('btnResetShift');
   const shiftTimeDisplay = document.getElementById('shiftTimeDisplay');
@@ -30,6 +38,7 @@
   const btnClearCustomDt = document.getElementById('btnClearCustomDt');
   const activeFilterBanner = document.getElementById('activeFilterBanner');
 
+  // Password Modal Elements
   const pwModal = document.getElementById('pwModal');
   const pwModalClose = document.getElementById('pwModalClose');
   const pwForm = document.getElementById('pwForm');
@@ -39,10 +48,13 @@
   const pwError = document.getElementById('pwError');
   const pwSuccess = document.getElementById('pwSuccess');
 
+  // Audio Context & Notifications State
   let soundEnabled = false;
   let audioContext = null;
   let knownOrderIds = new Set();
+  let alertedOrderIds = new Set();
   let isFirstLoad = true;
+  let isSwitchingPeriod = false;
 
   const statusLabels = {
     pending: 'قيد الانتظار',
@@ -53,6 +65,9 @@
     cancelled: 'ملغي'
   };
 
+  /* ============================================================
+     AUDIO ALERT SYSTEM (Web Audio API)
+     ============================================================ */
   function initAudioContext() {
     if (audioContext) return;
     try {
@@ -112,6 +127,9 @@
     }
   }
 
+  /* ============================================================
+     SHIFT TIMING & STORAGE
+     ============================================================ */
   function getShiftStart() {
     let saved = localStorage.getItem(SHIFT_STORAGE_KEY);
     if (!saved) {
@@ -127,17 +145,42 @@
     const formattedShift = formatDateTimeArabic(shiftStart);
 
     const confirmed = confirm(
-      `⚠️ هل أنت متأكد من تصفير الوردية وبدء شيفت جديد؟\n\nالوردية السابقة بدأت: ${formattedShift}\n\nسيتم بدء عداد الشيفت الجديد من اللحظة الحالية الآن.`
+      `⚠️ هل أنت متأكد من تصفير الوردية وبدء شيفت جديد؟\n\nالوردية السابقة بدأت: ${formattedShift}\n\nسيتم تصفير جميع العدادات وبدء حساب الأوردرات من اللحظة الحالية الآن.`
     );
     if (!confirmed) return;
 
     const now = new Date();
     localStorage.setItem(SHIFT_STORAGE_KEY, now.toISOString());
 
+    // 1. Instantly zero-out all stat cards
+    const elOrders = document.getElementById('statTotalOrders');
+    const elRev = document.getElementById('statTotalRevenue');
+    const elPending = document.getElementById('statPendingOrders');
+    const elPrep = document.getElementById('statPreparingOrders');
+    if (elOrders) elOrders.textContent = '0';
+    if (elRev) elRev.textContent = '0 ج.م';
+    if (elPending) elPending.textContent = '0';
+    if (elPrep) elPrep.textContent = '0';
+
+    // 2. Instantly empty the orders table
+    if (ordersList) {
+      ordersList.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align: center; padding: 2.5rem 1rem; color: var(--color-text-muted);">
+            <i class="fas fa-check-circle" style="font-size: 2.5rem; color: #10B981; margin-bottom: 0.75rem;"></i>
+            <p style="font-size: 1.1rem; font-weight: 700; color: #FFFFFF;">تم تصفير الوردية وبدء شيفت جديد بنجاح</p>
+            <p style="font-size: 0.88rem; color: #A3C5CD;">في انتظار أول طلب جديد في هذه الوردية...</p>
+          </td>
+        </tr>
+      `;
+    }
+
+    // 3. Reset internal tracking & silence alerts
+    isSwitchingPeriod = true;
+    knownOrderIds.clear();
+
     updateShiftDisplay();
     setPeriod('shift');
-    loadOrders();
-    loadStats();
   }
 
   function updateShiftDisplay() {
@@ -161,8 +204,12 @@
     return `${day}/${month} — ${hours}:${minutes} ${ampm}`;
   }
 
+  /* ============================================================
+     DATE & PERIOD FILTERING
+     ============================================================ */
   function setPeriod(period) {
     currentPeriod = period;
+    isSwitchingPeriod = true; // Silence sound alerts when switching to past periods
 
     document.querySelectorAll('.period-tab').forEach(t => {
       t.classList.toggle('active', t.dataset.period === period);
@@ -230,6 +277,9 @@
     return {};
   }
 
+  /* ============================================================
+     LOAD ORDERS & STATS
+     ============================================================ */
   async function loadOrders() {
     try {
       const params = {
@@ -245,15 +295,40 @@
 
       const orders = res.orders || [];
 
-      if (!isFirstLoad && soundEnabled) {
-        const newOrders = orders.filter(o => !knownOrderIds.has(o._id));
-        if (newOrders.length > 0) {
+      // Check for new orders to trigger sound:
+      // STRICT SOUND ALERT RULES:
+      // 1. Must be active shift view (currentPeriod === 'shift')
+      // 2. Must NOT be initial page load or switching periods
+      // 3. Sound must be enabled
+      // 4. Order must be 'pending' status
+      // 5. Order must NOT have been alerted before
+      // 6. Order must be recently created (within last 15 minutes)
+      if (currentPeriod === 'shift' && !isFirstLoad && !isSwitchingPeriod && soundEnabled) {
+        const nowMs = Date.now();
+        const incomingOrders = orders.filter(o => {
+          if (o.status !== 'pending') return false;
+          if (alertedOrderIds.has(o._id)) return false;
+          const createdMs = new Date(o.createdAt).getTime();
+          return !isNaN(createdMs) && (nowMs - createdMs < 15 * 60 * 1000);
+        });
+
+        if (incomingOrders.length > 0) {
+          incomingOrders.forEach(o => alertedOrderIds.add(o._id));
           playNotificationSound();
         }
       }
 
-      knownOrderIds = new Set(orders.map(o => o._id));
+      // Mark all orders as known
+      orders.forEach(o => {
+        knownOrderIds.add(o._id);
+        if (currentPeriod !== 'shift') {
+          // If viewing historical orders, permanently mark them as alerted so returning to shift never alarms on them
+          alertedOrderIds.add(o._id);
+        }
+      });
+
       isFirstLoad = false;
+      isSwitchingPeriod = false;
 
       renderOrdersTable(orders);
     } catch (err) {
@@ -277,6 +352,9 @@
     }
   }
 
+  /* ============================================================
+     RENDER ORDERS TABLE
+     ============================================================ */
   function renderOrdersTable(orders) {
     if (!ordersList) return;
 
@@ -360,6 +438,9 @@
     }
   }
 
+  /* ============================================================
+     THERMAL TICKET PRINTING (Dual format: Kitchen & Customer)
+     ============================================================ */
   async function printThermalTicket(orderId, ticketType) {
     try {
       const res = await window.HeshamFouadAPI.getOrderById(orderId);
@@ -445,6 +526,9 @@
     }
   }
 
+  /* ============================================================
+     PASSWORD CHANGE MODAL
+     ============================================================ */
   function openPasswordModal() {
     if (!pwModal) return;
     pwModal.style.display = 'flex';
@@ -499,13 +583,18 @@
     }
   }
 
+  /* ============================================================
+     EVENT LISTENERS & INIT
+     ============================================================ */
   function init() {
+    // Check if logged in as admin
     if (window.HeshamFouadAPI.isLoggedIn() && window.HeshamFouadAPI.isAdmin()) {
       showDashboard();
     } else {
       showLogin();
     }
 
+    // Login Form
     if (loginForm) {
       loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -525,26 +614,31 @@
       });
     }
 
+    // Logout
     if (logoutBtn) {
       logoutBtn.addEventListener('click', () => {
         window.HeshamFouadAPI.logout();
       });
     }
 
+    // Sound toggle
     if (soundBtn) {
       soundBtn.addEventListener('click', toggleSound);
     }
 
+    // Reset Shift
     if (btnResetShift) {
       btnResetShift.addEventListener('click', resetShift);
     }
 
+    // Period Tabs
     document.querySelectorAll('.period-tab').forEach(tab => {
       tab.addEventListener('click', () => {
         setPeriod(tab.dataset.period);
       });
     });
 
+    // Custom Date Range
     if (btnApplyCustomDt) {
       btnApplyCustomDt.addEventListener('click', () => {
         if (!dtStart.value || !dtEnd.value) {
@@ -565,6 +659,7 @@
       });
     }
 
+    // Password Modal Handlers
     if (btnAdminPw) {
       btnAdminPw.addEventListener('click', openPasswordModal);
     }
@@ -590,6 +685,7 @@
     loadOrders();
     loadStats();
 
+    // Auto-refresh orders every 6 seconds
     if (refreshInterval) clearInterval(refreshInterval);
     refreshInterval = setInterval(() => {
       loadOrders();
