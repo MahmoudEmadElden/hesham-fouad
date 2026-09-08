@@ -1,3 +1,6 @@
+/**
+ * Order Model — Hesham Fouad King of Crepe
+ */
 const mongoose = require('mongoose');
 
 const orderItemSchema = new mongoose.Schema({
@@ -43,6 +46,10 @@ const orderSchema = new mongoose.Schema({
     type: String,
     required: [true, 'عنوان التوصيل بالتفصيل مطلوب'],
     trim: true
+  },
+  mapLocation: {
+    type: String,
+    default: ''
   },
   items: {
     type: [orderItemSchema],
