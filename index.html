@@ -61,6 +61,14 @@
           </svg>
           <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
         </a>
+
+        <!-- Auth Button / Profile -->
+        <div id="navAuthContainer">
+          <a href="auth.html" class="nav-auth-btn" id="navAuthBtn" aria-label="تسجيل الدخول">
+            <i class="fas fa-user"></i>
+            <span id="authBtnText">دخول</span>
+          </a>
+        </div>
       </div>
 
     </div>
@@ -155,8 +163,82 @@
   </a>
 
   <!-- Scripts -->
+  <script src="js/api.js"></script>
   <script src="js/cart.js"></script>
   <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initNavAuthState();
+    });
+
+    function initNavAuthState() {
+      if (typeof window.HeshamFouadAPI === 'undefined') return;
+      const authContainer = document.getElementById('navAuthContainer');
+      if (!authContainer) return;
+
+      if (window.HeshamFouadAPI.isLoggedIn()) {
+        const user = window.HeshamFouadAPI.getUser();
+        const displayName = user ? (user.displayName || user.username) : 'حسابي';
+
+        authContainer.innerHTML = `
+          <div class="nav-user-dropdown" id="navUserDropdownWrap">
+            <button type="button" class="nav-auth-btn" id="navUserBtn" aria-label="قائمة الحساب">
+              <i class="fas fa-crown" style="color:var(--accent-gold);"></i>
+              <span>${displayName}</span>
+              <i class="fas fa-chevron-down" style="font-size:0.75rem;"></i>
+            </button>
+            <div class="user-dropdown-menu" id="userDropdownMenu">
+              <a href="orders.html" class="dropdown-item">
+                <i class="fas fa-receipt" style="color:var(--accent-gold);"></i>
+                <span>طلباتي</span>
+              </a>
+              <button type="button" class="dropdown-item" id="btnChangePwModal">
+                <i class="fas fa-key" style="color:var(--primary-light);"></i>
+                <span>تغيير كلمة المرور</span>
+              </button>
+              <button type="button" class="dropdown-item logout-item" id="btnLogoutCustomer">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>تسجيل الخروج</span>
+              </button>
+            </div>
+          </div>
+        `;
+
+        const userBtn = document.getElementById('navUserBtn');
+        const menu = document.getElementById('userDropdownMenu');
+        const wrap = document.getElementById('navUserDropdownWrap');
+
+        if (userBtn && menu) {
+          userBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            menu.classList.toggle('show');
+          });
+
+          document.getElementById('btnChangePwModal')?.addEventListener('click', () => {
+            menu.classList.remove('show');
+            window.HeshamFouadAPI.openChangePasswordModal();
+          });
+
+          document.getElementById('btnLogoutCustomer')?.addEventListener('click', () => {
+            window.HeshamFouadAPI.logout();
+          });
+
+          document.addEventListener('click', (e) => {
+            if (wrap && !wrap.contains(e.target)) {
+              menu.classList.remove('show');
+            }
+          });
+        }
+      } else {
+        authContainer.innerHTML = `
+          <a href="auth.html" class="nav-auth-btn" id="navAuthBtn" aria-label="تسجيل الدخول">
+            <i class="fas fa-user"></i>
+            <span>دخول</span>
+          </a>
+        `;
+      }
+    }
+
     // Update cart badge if any items exist
     try {
       if (window.HeshamFouadCart) {

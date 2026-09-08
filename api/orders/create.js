@@ -1,9 +1,16 @@
+/**
+ * POST /api/orders/create
+ * Secure order creation for Hesham Fouad.
+ */
 const { connectDB } = require('../_lib/db');
-const { handleCors } = require('../_lib/auth-middleware');
+const { verifyToken, handleCors } = require('../_lib/auth-middleware');
 const Order = require('../_lib/models/Order');
 const Counter = require('../_lib/models/Counter');
+const User = require('../_lib/models/User');
 
+// Official Hesham Fouad Item Price Map
 const PRICE_MAP = {
+  // Signatures & Mixes
   'hf-beast': 150,
   'hf-toscanini': 135,
   'hf-milano': 130,
@@ -16,6 +23,8 @@ const PRICE_MAP = {
   'hf-mix-chicken': 120,
   'hf-mix-smoked': 120,
   'hf-super-crunchy': 115,
+
+  // Chicken
   'chk-ranch': 120,
   'chk-bbq': 120,
   'chk-shish': 115,
@@ -27,6 +36,8 @@ const PRICE_MAP = {
   'chk-strips': 95,
   'chk-pane': 95,
   'chk-nuggets': 95,
+
+  // Meat
   'meat-steak': 120,
   'meat-burger': 105,
   'meat-salami': 100,
@@ -35,8 +46,12 @@ const PRICE_MAP = {
   'meat-kofta': 95,
   'meat-sausage': 90,
   'meat-hotdog': 90,
+
+  // Fries & Cheese
   'side-mix-cheese': 80,
   'side-fries': 60,
+
+  // Sweet
   'swt-nutella-oreo': 105,
   'swt-nutella': 100,
   'swt-lotus': 90,
@@ -51,6 +66,7 @@ const PRICE_MAP = {
   'swt-jam': 80
 };
 
+// Addons & Sauces Price Map
 const ADDON_MAP = {
   'extra-romi': 20,
   'extra-mozzarella': 20,
@@ -78,27 +94,48 @@ module.exports = async function handler(req, res) {
   if (handleCors(req, res)) return;
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
+    return res.status(405).json({ success: false, message: 'Method Not Allowed' });
   }
 
   try {
+    // 1. Mandatory Customer Authentication
+    const decoded = verifyToken(req.headers.authorization);
     await connectDB();
 
-    const { customerName, customerPhone, deliveryAddress, items, notes } = req.body;
+    const user = await User.findById(decoded.userId).select('displayName username phone address');
 
-    if (!customerName || !customerPhone || !deliveryAddress) {
-      return res.status(400).json({ message: 'الاسم ورقم التليفون وعنوان التوصيل مطلوبين' });
+    const { items, notes, deliveryAddress: inputAddress, customerPhone: inputPhone, customerName: inputName } = req.body;
+
+    const customerName = (inputName && inputName.trim()) || (user ? (user.displayName || user.username) : '');
+    const customerPhone = (inputPhone && inputPhone.trim()) || (user ? user.phone : '');
+    const deliveryAddress = (inputAddress && inputAddress.trim()) || (user ? user.address : '');
+
+    if (!customerName || customerName.length < 3) {
+      return res.status(400).json({ success: false, message: 'الاسم بالكامل مطلوب لإتمام الطلب' });
+    }
+
+    const cleanPhone = customerPhone.replace(/[\s-]/g, '');
+    if (!cleanPhone || !/^01[0125][0-9]{8}$/.test(cleanPhone)) {
+      return res.status(400).json({ success: false, message: 'رقم الموبايل غير صحيح. يرجى إدخال رقم مصري صحيح مكون من 11 رقماً' });
+    }
+
+    if (!deliveryAddress || deliveryAddress.length < 5) {
+      return res.status(400).json({ success: false, message: 'عنوان التوصيل بالتفصيل بأسيوط مطلوب لإتمام الطلب' });
     }
 
     if (!Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ message: 'يجب اختيار صنف واحد على الأقل' });
+      return res.status(400).json({ success: false, message: 'يجب اختيار صنف واحد على الأقل' });
     }
 
     let subtotal = 0;
     const validatedItems = [];
 
     for (const item of items) {
-      const basePrice = PRICE_MAP[item.itemId] || Number(item.unitPrice) || 0;
+      // Map both short and full IDs
+      const basePrice = PRICE_MAP[item.itemId] || PRICE_MAP[item.itemId?.replace('hesham-fouad-signature', 'hf-beast')] || 0;
+      if (!basePrice) {
+        return res.status(400).json({ success: false, message: `الصنف ${item.name || item.itemId} غير صالح أو غير مسجل في قائمة الأسعار` });
+      }
       let addonsSum = 0;
 
       const validatedAddons = [];
@@ -147,12 +184,14 @@ module.exports = async function handler(req, res) {
     const deliveryFee = 15;
     const totalAmount = subtotal + deliveryFee;
 
+    // Get next order number
     const orderNumber = await Counter.getNextSequence('orderNumber');
 
     const order = new Order({
       orderNumber,
+      customer: decoded.userId,
       customerName: customerName.trim(),
-      customerPhone: customerPhone.trim(),
+      customerPhone: cleanPhone,
       deliveryAddress: deliveryAddress.trim(),
       items: validatedItems,
       subtotal,
@@ -170,6 +209,9 @@ module.exports = async function handler(req, res) {
       order: {
         id: order._id,
         orderNumber: order.orderNumber,
+        customerName: order.customerName,
+        customerPhone: order.customerPhone,
+        deliveryAddress: order.deliveryAddress,
         totalAmount: order.totalAmount,
         status: order.status,
         createdAt: order.createdAt
@@ -177,7 +219,10 @@ module.exports = async function handler(req, res) {
     });
 
   } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ success: false, message: error.message });
+    }
     console.error('Error creating order:', error);
-    return res.status(500).json({ message: 'حدث خطأ في تسجيل الطلب', error: error.message });
+    return res.status(500).json({ success: false, message: 'حدث خطأ في تسجيل الطلب', error: error.message });
   }
 };

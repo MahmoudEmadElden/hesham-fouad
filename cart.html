@@ -242,6 +242,14 @@
           </svg>
           <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
         </a>
+
+        <!-- Auth Button / Profile -->
+        <div id="navAuthContainer">
+          <a href="auth.html?returnTo=cart.html" class="nav-auth-btn" id="navAuthBtn" aria-label="تسجيل الدخول">
+            <i class="fas fa-user"></i>
+            <span id="authBtnText">دخول</span>
+          </a>
+        </div>
       </div>
 
     </div>
@@ -273,6 +281,27 @@
         <!-- Customer Info & Order Summary -->
         <div class="checkout-summary-card">
           <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.25rem; color: #fff;">بيانات التوصيل في أسيوط</h3>
+
+          <!-- Guest Warning Banner -->
+          <div id="authRequiredBanner" class="auth-required-banner">
+            <div class="auth-banner-content">
+              <i class="fas fa-lock auth-banner-icon"></i>
+              <div>
+                <h4 style="margin:0 0 0.25rem; font-weight:800; color:#fff;">تسجيل الدخول مطلوب للطلب</h4>
+                <p style="margin:0; font-size:0.85rem; color:var(--text-muted);">عفواً، لا يمكن الطلب كزائر لضمان صحة بيانات التوصيل ومتابعة حالة أوردرك.</p>
+              </div>
+            </div>
+            <a href="auth.html?returnTo=cart.html" class="btn-auth-banner">
+              <i class="fas fa-user-plus"></i>
+              <span>تسجيل الدخول / إنشاء حساب</span>
+            </a>
+          </div>
+
+          <!-- Verified Customer Badge -->
+          <div id="authVerifiedBadge" class="auth-verified-badge" style="display: none;">
+            <i class="fas fa-check-circle" style="color:var(--accent-gold); font-size:1.15rem;"></i>
+            <span>حساب مسجل: <strong id="verifiedCustName" style="color:var(--accent-gold);"></strong> (تم ملء بياناتك تلقائياً)</span>
+          </div>
 
           <form id="checkout-form" onsubmit="event.preventDefault(); submitWhatsAppOrder();">
             <div class="form-group">
@@ -370,8 +399,107 @@
   <script src="js/cart.js"></script>
   <script src="js/api.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', renderCartPage);
+    document.addEventListener('DOMContentLoaded', () => {
+      renderCartPage();
+      initAuthState();
+    });
     window.addEventListener('cartUpdated', renderCartPage);
+
+    function initAuthState() {
+      if (typeof window.HeshamFouadAPI === 'undefined') return;
+
+      const authBanner = document.getElementById('authRequiredBanner');
+      const verifiedBadge = document.getElementById('authVerifiedBadge');
+      const verifiedName = document.getElementById('verifiedCustName');
+      const authContainer = document.getElementById('navAuthContainer');
+
+      if (window.HeshamFouadAPI.isLoggedIn()) {
+        const user = window.HeshamFouadAPI.getUser();
+        const displayName = user ? (user.displayName || user.username) : 'حسابي';
+
+        if (authBanner) authBanner.style.display = 'none';
+        if (verifiedBadge) {
+          verifiedBadge.style.display = 'flex';
+          if (verifiedName) verifiedName.textContent = displayName;
+        }
+
+        // Prefill inputs
+        if (user) {
+          const nameInput = document.getElementById('cust-name');
+          const phoneInput = document.getElementById('cust-phone');
+          const addressInput = document.getElementById('cust-address');
+          if (nameInput && !nameInput.value && user.displayName) nameInput.value = user.displayName;
+          if (phoneInput && !phoneInput.value && user.phone) phoneInput.value = user.phone;
+          if (addressInput && !addressInput.value && user.address) addressInput.value = user.address;
+        }
+
+        // Setup Navbar User Dropdown
+        if (authContainer) {
+          authContainer.innerHTML = `
+            <div class="nav-user-dropdown" id="navUserDropdownWrap">
+              <button type="button" class="nav-auth-btn" id="navUserBtn" aria-label="قائمة الحساب">
+                <i class="fas fa-crown" style="color:var(--accent-gold);"></i>
+                <span>${displayName}</span>
+                <i class="fas fa-chevron-down" style="font-size:0.75rem;"></i>
+              </button>
+              <div class="user-dropdown-menu" id="userDropdownMenu">
+                <a href="orders.html" class="dropdown-item">
+                  <i class="fas fa-receipt" style="color:var(--accent-gold);"></i>
+                  <span>طلباتي</span>
+                </a>
+                <button type="button" class="dropdown-item" id="btnChangePwModal">
+                  <i class="fas fa-key" style="color:var(--primary-light);"></i>
+                  <span>تغيير كلمة المرور</span>
+                </button>
+                <button type="button" class="dropdown-item logout-item" id="btnLogoutCustomer">
+                  <i class="fas fa-sign-out-alt"></i>
+                  <span>تسجيل الخروج</span>
+                </button>
+              </div>
+            </div>
+          `;
+
+          const userBtn = document.getElementById('navUserBtn');
+          const menu = document.getElementById('userDropdownMenu');
+          const wrap = document.getElementById('navUserDropdownWrap');
+
+          if (userBtn && menu) {
+            userBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              menu.classList.toggle('show');
+            });
+
+            document.getElementById('btnChangePwModal')?.addEventListener('click', () => {
+              menu.classList.remove('show');
+              window.HeshamFouadAPI.openChangePasswordModal();
+            });
+
+            document.getElementById('btnLogoutCustomer')?.addEventListener('click', () => {
+              window.HeshamFouadAPI.logout();
+            });
+
+            document.addEventListener('click', (e) => {
+              if (wrap && !wrap.contains(e.target)) {
+                menu.classList.remove('show');
+              }
+            });
+          }
+        }
+      } else {
+        if (authBanner) authBanner.style.display = 'flex';
+        if (verifiedBadge) verifiedBadge.style.display = 'none';
+
+        if (authContainer) {
+          authContainer.innerHTML = `
+            <a href="auth.html?returnTo=cart.html" class="nav-auth-btn" id="navAuthBtn" aria-label="تسجيل الدخول">
+              <i class="fas fa-user"></i>
+              <span>دخول</span>
+            </a>
+          `;
+        }
+      }
+    }
 
     function renderCartPage() {
       const cart = window.HeshamFouadCart.getCart();
@@ -429,6 +557,13 @@
     }
 
     async function submitWhatsAppOrder() {
+      // 1. Strict Guest Ordering Prevention
+      if (!window.HeshamFouadAPI || !window.HeshamFouadAPI.isLoggedIn()) {
+        alert('عفواً، لا يمكن إتمام الطلب كزائر!\nيجب تسجيل الدخول أو إنشاء حساب جديد لضمان بياناتك وتوصيل طلبك.');
+        window.location.href = 'auth.html?returnTo=cart.html';
+        return;
+      }
+
       const cart = window.HeshamFouadCart.getCart();
       if (cart.length === 0) {
         alert('سلة المشتريات فارغة! يرجى اختيار الأصناف أولاً من المنيو.');
@@ -440,50 +575,69 @@
       const address = document.getElementById('cust-address').value.trim();
       const notes = document.getElementById('cust-notes').value.trim();
 
-      if (!name || !phone || !address) {
-        alert('من فضلك املأ الاسم ورقم الموبايل وعنوان التوصيل بأسيوط.');
+      if (!name || name.length < 3) {
+        alert('من فضلك ادخل الاسم بالكامل ثلاثي.');
+        document.getElementById('cust-name').focus();
+        return;
+      }
+
+      const cleanPhone = phone.replace(/[\s-]/g, '');
+      if (!cleanPhone || !/^01[0125][0-9]{8}$/.test(cleanPhone)) {
+        alert('من فضلك ادخل رقم موبايل مصري صحيح مكون من 11 رقماً يبدأ بـ 01.');
+        document.getElementById('cust-phone').focus();
+        return;
+      }
+
+      if (!address || address.length < 5) {
+        alert('من فضلك ادخل عنوان التوصيل بالتفصيل بأسيوط (الشارع، رقم العمارة، الشقة).');
+        document.getElementById('cust-address').focus();
         return;
       }
 
       const submitBtn = document.querySelector('.btn-whatsapp-order');
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري تسجيل الطلب وإرساله...';
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري حفظ الطلب بالسيستم وتجهيزه...';
       }
 
       let orderNumber = '';
 
-      // 1. Try registering order in database
+      // 2. Register order securely in database with authenticated token
       try {
-        if (window.HeshamFouadAPI) {
-          const apiRes = await window.HeshamFouadAPI.createOrder({
-            customerName: name,
-            customerPhone: phone,
-            deliveryAddress: address,
-            notes,
-            items: cart.map(i => ({
-              itemId: i.itemId,
-              name: i.name,
-              quantity: i.quantity,
-              unitPrice: i.unitPrice,
-              selectedAddons: i.selectedAddons || [],
-              selectedSauces: i.selectedSauces || [],
-              notes: i.notes || ''
-            }))
-          });
-          if (apiRes && apiRes.order && apiRes.order.orderNumber) {
-            orderNumber = apiRes.order.orderNumber;
-          }
+        const apiRes = await window.HeshamFouadAPI.createOrder({
+          customerName: name,
+          customerPhone: cleanPhone,
+          deliveryAddress: address,
+          notes,
+          items: cart.map(i => ({
+            itemId: i.itemId,
+            name: i.name,
+            quantity: i.quantity,
+            unitPrice: i.unitPrice,
+            selectedAddons: i.selectedAddons || [],
+            selectedSauces: i.selectedSauces || [],
+            notes: i.notes || ''
+          }))
+        });
+
+        if (apiRes && apiRes.order && apiRes.order.orderNumber) {
+          orderNumber = apiRes.order.orderNumber;
         }
       } catch (err) {
-        console.warn('Could not save to DB (offline or API down), proceeding to WhatsApp direct:', err);
+        console.error('Error saving order to DB:', err);
+        alert(err.message || 'حدث خطأ في حفظ الطلب. تأكد من اتصالك بالإنترنت وسجل دخولك ثانية.');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fab fa-whatsapp" style="font-size: 1.3rem;"></i> <span>إرسال الطلب عبر واتساب مباشرة</span>';
+        }
+        return;
       }
 
-      // 2. Open WhatsApp message
-      const customerInfo = { name, phone, address, notes };
+      // 3. Prepare official WhatsApp message with verified order number
+      const customerInfo = { name, phone: cleanPhone, address, notes };
       let url = window.HeshamFouadCart.formatWhatsAppOrder(customerInfo);
       if (orderNumber) {
-        url += encodeURIComponent(`\n*رقم الأوردر بالسيستم:* #${orderNumber}`);
+        url += encodeURIComponent(`\n*رقم الأوردر المعتمد بالسيستم:* #${orderNumber}`);
       }
 
       // Clear cart
@@ -495,9 +649,9 @@
         submitBtn.innerHTML = '<i class="fab fa-whatsapp" style="font-size: 1.3rem;"></i> <span>إرسال الطلب عبر واتساب مباشرة</span>';
       }
 
-      // Redirect to WhatsApp
+      // Open WhatsApp and redirect user to my orders tracking page
       window.open(url, '_blank');
-      renderCartPage();
+      window.location.href = 'orders.html';
     }
   </script>
 </body>
