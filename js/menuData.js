@@ -11,9 +11,9 @@
     slogan: 'أجود كريب في أسيوط معمول بحب وعناية لتستمتع بأفضل تجربة طعام.',
     address: 'أسيوط — شارع المحافظة بجوار الفانوس أمام مستشفى طيبة',
     locationShort: 'أسيوط، شارع المحافظة',
-    phones: ['01554006656', '01038945555'],
-    primaryPhone: '01554006656',
-    secondaryPhone: '01038945555',
+    phones: ['01038945555', '01554006656'],
+    primaryPhone: '01038945555',
+    secondaryPhone: '01554006656',
     whatsapp: '201554006656',
     openingHours: 'يومياً من 12:00 ظهراً حتى 3:00 فجراً',
     deliveryFee: 15,
@@ -499,7 +499,7 @@
       categoryId: 'sweet',
       name: 'كريب مربى تين صعيدي',
       price: 80,
-      description: 'مربى تين طبيعية ناعمة مع كريمة باستري والمكسرات.',
+      description: 'مربى تين طبيعية ناعمة مع كريمة الباستري والمكسرات.',
       image: 'assets/images/crepe-cross-section.png',
       tags: ['مربى تين']
     }
