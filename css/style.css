@@ -661,6 +661,119 @@ button {
   margin: 0 auto 2.25rem;
 }
 
+/* ==========================================================================
+   LANDING 3 ACTIONS GRID (تصفح المنيو • اطلب أونلاين • اطلب دليفري سريع)
+   ========================================================================== */
+.landing-actions-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.landing-action-card {
+  display: flex;
+  align-items: center;
+  gap: 1.15rem;
+  padding: 1.25rem 1.4rem;
+  border-radius: 20px;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-action-card:hover {
+  transform: translateY(-4px);
+}
+
+.landing-action-card .action-card-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.landing-action-card:hover .action-card-icon {
+  transform: scale(1.1);
+}
+
+.landing-action-card .action-card-content {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+}
+
+.landing-action-card .action-card-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.landing-action-card .action-card-desc {
+  font-size: 0.82rem;
+  font-weight: 700;
+  opacity: 0.88;
+  margin-top: 0.2rem;
+}
+
+/* Card 1: Menu */
+.landing-action-card.card-menu {
+  background: linear-gradient(135deg, #0A697A 0%, #04242B 100%);
+  border: 1px solid var(--primary-light);
+  color: #FFFFFF;
+}
+.landing-action-card.card-menu .action-card-icon {
+  background: rgba(24, 181, 209, 0.2);
+  color: var(--primary-light);
+  border: 1px solid rgba(24, 181, 209, 0.3);
+}
+.landing-action-card.card-menu:hover {
+  box-shadow: 0 14px 35px rgba(24, 181, 209, 0.45);
+  border-color: #18B5D1;
+}
+
+/* Card 2: Online Order */
+.landing-action-card.card-online {
+  background: linear-gradient(135deg, #F5A623 0%, #B87105 100%);
+  border: 1px solid var(--accent-gold-hover);
+  color: #031215;
+}
+.landing-action-card.card-online .action-card-icon {
+  background: rgba(3, 18, 21, 0.2);
+  color: #031215;
+  border: 1px solid rgba(3, 18, 21, 0.25);
+}
+.landing-action-card.card-online:hover {
+  box-shadow: 0 14px 35px rgba(245, 166, 35, 0.55);
+  border-color: #FFD166;
+}
+
+/* Card 3: Fast Delivery */
+.landing-action-card.card-delivery {
+  background: linear-gradient(135deg, #10B981 0%, #065F46 100%);
+  border: 1px solid #34D399;
+  color: #FFFFFF;
+}
+.landing-action-card.card-delivery .action-card-icon {
+  background: rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.landing-action-card.card-delivery:hover {
+  box-shadow: 0 14px 35px rgba(16, 185, 129, 0.45);
+  border-color: #6EE7B7;
+}
+
+/* Legacy fallback */
 .landing-actions-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -716,6 +829,52 @@ button {
   font-size: 0.82rem;
   font-weight: 700;
   opacity: 0.9;
+}
+
+/* ==========================================================================
+   LANDING REELS SHOWCASE
+   ========================================================================== */
+.landing-reels-showcase {
+  width: 100%;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.landing-reels-header {
+  margin-bottom: 1.75rem;
+}
+
+.landing-reels-header .reels-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--accent-gold);
+  background: rgba(245, 166, 35, 0.12);
+  border: 1px solid var(--border-gold);
+  padding: 0.35rem 1.15rem;
+  border-radius: var(--radius-full);
+  margin-bottom: 0.65rem;
+  box-shadow: 0 0 15px rgba(245, 166, 35, 0.2);
+}
+
+.landing-reels-header .reels-main-heading {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 2.35rem);
+  font-weight: 900;
+  color: #FFFFFF;
+  background: linear-gradient(135deg, #FFFFFF, #FFE5B4 60%, var(--accent-gold-hover) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.landing-reels-header .reels-sub-text {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  max-width: 550px;
+  margin: 0 auto;
 }
 
 .landing-bottom-strip {
@@ -1797,19 +1956,39 @@ button {
 }
 
 /* ==========================================================================
-   RESPONSIVE OVERRIDES
+   RESPONSIVE OVERRIDES (MOBILE • TABLET • DESKTOP)
    ========================================================================== */
-@media (max-width: 992px) {
-  .landing-bottom-strip {
-    grid-template-columns: 1fr;
+@media (max-width: 1024px) {
+  .landing-actions-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.9rem;
+  }
+  .landing-action-card {
+    padding: 1.1rem 1rem;
+    gap: 0.85rem;
+  }
+  .landing-action-card .action-card-title {
+    font-size: 1.15rem;
+  }
+  .landing-action-card .action-card-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 1.25rem;
   }
   .reels-grid-row {
-    grid-template-columns: 1fr;
-    max-width: 380px;
-    margin: 0 auto;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
   }
-  .landing-actions-row {
+}
+
+@media (max-width: 900px) {
+  .landing-actions-grid-3 {
     grid-template-columns: 1fr;
+    max-width: 460px;
+  }
+  .landing-bottom-strip {
+    grid-template-columns: 1fr;
+    gap: 1rem;
   }
   .nav-time-badge {
     display: none;
@@ -1820,6 +1999,7 @@ button {
   }
   .cart-grid {
     grid-template-columns: 1fr;
+    gap: 1.75rem;
   }
 }
 
@@ -1829,16 +2009,74 @@ button {
   }
 }
 
-@media (max-width: 600px) {
-  .landing-title {
-    font-size: 2.5rem;
-  }
-  .landing-catchphrase {
-    font-size: 1.15rem;
+@media (max-width: 680px) {
+  .landing-hero-wrapper {
+    padding: 1.5rem 0.85rem 3.5rem;
+    min-height: auto;
   }
   .landing-brand-card {
-    padding: 2.25rem 1.25rem;
+    padding: 2.25rem 1.15rem;
+    border-radius: 20px;
   }
+  .landing-title {
+    font-size: clamp(2rem, 8vw, 2.6rem);
+  }
+  .landing-catchphrase {
+    font-size: 1.1rem;
+  }
+  .landing-description {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1.75rem;
+  }
+  .landing-actions-grid-3 {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    max-width: 100%;
+  }
+  .landing-action-card {
+    padding: 0.95rem 1.15rem;
+    border-radius: 16px;
+  }
+  .landing-action-card .action-card-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 1.2rem;
+  }
+  .landing-action-card .action-card-title {
+    font-size: 1.1rem;
+  }
+  .landing-action-card .action-card-desc {
+    font-size: 0.78rem;
+  }
+
+  /* Responsive Horizontal Swipe for 3 Reels on mobile */
+  .reels-grid-row {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 0.9rem;
+    padding: 0.5rem 0.25rem 1.25rem;
+  }
+  .reels-grid-row::-webkit-scrollbar {
+    height: 5px;
+  }
+  .reels-grid-row::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+  }
+  .reels-grid-row::-webkit-scrollbar-thumb {
+    background: var(--accent-gold);
+    border-radius: 10px;
+  }
+  .reel-item-card {
+    flex: 0 0 82%;
+    max-width: 290px;
+    scroll-snap-align: center;
+    border-radius: 16px;
+  }
+
   .menu-items-grid {
     grid-template-columns: 1fr;
   }
