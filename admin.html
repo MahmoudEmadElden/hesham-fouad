@@ -48,20 +48,20 @@
   <div class="admin-dashboard" id="adminDashboard" style="display:none;">
 
     <!-- Top Bar Header -->
-    <header class="navbar" style="position:sticky;top:0;z-index:100;background:rgba(13, 21, 24, 0.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--color-border);">
-      <div class="container navbar-container" style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;">
-        <div style="display:flex;align-items:center;gap:0.75rem;">
-          <img src="assets/images/logo.png" alt="لوجو" style="width:38px;height:38px;border-radius:50%;border:1px solid var(--color-border-gold);object-fit:cover;">
-          <div>
-            <span style="font-weight:900;font-size:1.05rem;color:#fff;display:block;">هشام فؤاد</span>
-            <span style="font-size:0.75rem;color:var(--color-accent-gold);"><i class="fas fa-crown"></i> كاشير فرع أسيوط</span>
+    <header class="navbar admin-header-nav" style="position:sticky;top:0;z-index:100;background:rgba(13, 21, 24, 0.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--color-border);">
+      <div class="container admin-navbar-container">
+        <div class="admin-brand-block">
+          <img src="assets/images/logo.png" alt="لوجو هشام فؤاد" class="admin-brand-img">
+          <div class="admin-brand-text">
+            <span class="admin-brand-title">هشام فؤاد</span>
+            <span class="admin-brand-role"><i class="fas fa-crown"></i> كاشير فرع أسيوط</span>
           </div>
         </div>
 
-        <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+        <div class="admin-header-actions">
           <button class="admin-action-pill-btn" id="btnAdminPw" title="تغيير كلمة المرور">
             <i class="fas fa-key"></i>
-            <span>تغيير كلمة المرور</span>
+            <span>كلمة المرور</span>
           </button>
           <button class="admin-sound-btn" id="adminSoundBtn" title="تفعيل صوت الإشعارات">
             <span id="soundIcon"><i class="fas fa-volume-mute"></i></span>
