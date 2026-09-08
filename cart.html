@@ -18,6 +18,9 @@
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
+  <!-- Leaflet Map CSS for GPS Picker -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
 
@@ -152,6 +155,45 @@
     .form-control:focus {
       border-color: var(--primary-light);
     }
+    .btn-gps-picker {
+      background: rgba(245, 166, 35, 0.12);
+      border: 1px solid var(--border-gold);
+      color: var(--accent-gold);
+      border-radius: var(--radius-full);
+      padding: 0.35rem 0.85rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+    }
+    .btn-gps-picker:hover {
+      background: var(--accent-gold);
+      color: #031215;
+      box-shadow: 0 0 12px rgba(245, 166, 35, 0.4);
+    }
+    .payment-method-pill {
+      margin-top: 1rem;
+      padding: 0.8rem 1rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-size: 0.92rem;
+      color: #FFFFFF;
+    }
+    .payment-method-pill .pay-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #10B981;
+      box-shadow: 0 0 8px #10B981;
+      flex-shrink: 0;
+    }
     .summary-row {
       display: flex;
       align-items: center;
@@ -173,9 +215,43 @@
       font-family: 'Outfit';
       font-size: 1.6rem;
     }
+    .checkout-actions-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      margin-top: 1.5rem;
+    }
+    .btn-checkout-online {
+      width: 100%;
+      padding: 1.05rem;
+      background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-gold-dark) 100%);
+      color: #031215;
+      border: none;
+      border-radius: var(--radius-full);
+      font-size: 1.1rem;
+      font-weight: 900;
+      font-family: var(--font-display);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      box-shadow: 0 8px 24px rgba(245, 166, 35, 0.35);
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .btn-checkout-online:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(245, 166, 35, 0.5);
+      background: linear-gradient(135deg, var(--accent-gold-hover) 0%, var(--accent-gold) 100%);
+    }
+    .btn-checkout-online:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
     .btn-whatsapp-order {
       width: 100%;
-      padding: 1rem;
+      padding: 0.95rem;
       background: #10b981;
       color: #fff;
       border: none;
@@ -186,18 +262,60 @@
       align-items: center;
       justify-content: center;
       gap: 0.75rem;
-      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
-      margin-top: 1.5rem;
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.25);
+      margin-top: 0;
       cursor: pointer;
-      transition: var(--transition);
+      transition: all 0.25s ease;
     }
     .btn-whatsapp-order:hover {
       background: #059669;
       transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(16, 185, 129, 0.4);
+    }
+    .order-confirmation-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+      border-radius: var(--radius-lg);
+      padding: 3.5rem 2rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 35px rgba(245, 166, 35, 0.2);
+      max-width: 650px;
+      margin: 2rem auto;
+    }
+    .confirm-icon-circle {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      background: rgba(245, 166, 35, 0.15);
+      border: 2px solid var(--accent-gold);
+      color: var(--accent-gold);
+      font-size: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      box-shadow: 0 0 30px rgba(245, 166, 35, 0.35);
     }
     @media (max-width: 900px) {
       .cart-grid {
         grid-template-columns: 1fr;
+        gap: 1.75rem;
+      }
+      .cart-items-card, .checkout-summary-card {
+        padding: 1.5rem 1.15rem;
+      }
+    }
+    @media (max-width: 480px) {
+      .cart-item-row {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+      .cart-item-price {
+        margin-right: auto;
+      }
+      .btn-checkout-online, .btn-whatsapp-order {
+        font-size: 0.98rem;
+        padding: 0.9rem 0.75rem;
       }
     }
   </style>
@@ -303,7 +421,7 @@
             <span>حساب مسجل: <strong id="verifiedCustName" style="color:var(--accent-gold);"></strong> (تم ملء بياناتك تلقائياً)</span>
           </div>
 
-          <form id="checkout-form" onsubmit="event.preventDefault(); submitWhatsAppOrder();">
+          <form id="checkout-form" onsubmit="event.preventDefault(); submitOnlineOrder();">
             <div class="form-group">
               <label class="form-label" for="cust-name">الاسم بالكامل *</label>
               <input type="text" id="cust-name" class="form-control" placeholder="الاسم ثلاثي" required>
@@ -311,17 +429,37 @@
 
             <div class="form-group">
               <label class="form-label" for="cust-phone">رقم الموبايل للتواصل *</label>
-              <input type="tel" id="cust-phone" class="form-control" placeholder="01xxxxxxxxx" required>
+              <input type="tel" id="cust-phone" class="form-control" placeholder="01xxxxxxxxx" required dir="ltr">
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="cust-address">عنوان التوصيل بالتفصيل (بأسيوط) *</label>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                <label class="form-label" for="cust-address" style="margin-bottom: 0;">عنوان التوصيل بالتفصيل (بأسيوط) *</label>
+                <button type="button" id="btnGpsLocation" class="btn-gps-picker" onclick="initGpsLocation()">
+                  <i class="fas fa-location-crosshairs"></i>
+                  <span>تحديد موقعي بالـ GPS</span>
+                </button>
+              </div>
               <input type="text" id="cust-address" class="form-control" placeholder="الشارع، رقم العمارة، علامة مميزة..." required>
+              <input type="hidden" id="cust-map-location" value="">
+
+              <div id="mapPickerContainer" style="display:none; margin-top: 0.75rem; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-card);">
+                <div id="deliveryMap" style="height: 190px; width: 100%;"></div>
+                <div style="padding: 0.45rem 0.85rem; font-size: 0.78rem; background: var(--bg-surface); color: var(--accent-gold); display: flex; justify-content: space-between; align-items: center;">
+                  <span>تم تحديد موقعك بدقة (يمكنك سحب الدبوس لتعديل مكانك)</span>
+                  <span id="mapCoordsText" style="direction: ltr; font-family: monospace; font-weight: 700;"></span>
+                </div>
+              </div>
             </div>
 
             <div class="form-group">
               <label class="form-label" for="cust-notes">ملاحظات للأوردر</label>
               <input type="text" id="cust-notes" class="form-control" placeholder="أي تفاصيل خاصة بالشيف أو المندوب">
+            </div>
+
+            <div class="payment-method-pill">
+              <span class="pay-dot"></span>
+              <span>طريقة الدفع: <strong style="color: var(--accent-gold);">الدفع نقداً عند الاستلام (كاش)</strong></span>
             </div>
 
             <!-- Financial Breakdown -->
@@ -340,12 +478,41 @@
               </div>
             </div>
 
-            <!-- Action Buttons -->
-            <button type="button" class="btn-whatsapp-order" onclick="submitWhatsAppOrder()">
-              <i class="fab fa-whatsapp" style="font-size: 1.3rem;"></i>
-              <span>إرسال الطلب عبر واتساب مباشرة</span>
-            </button>
+            <!-- Dual Action Buttons -->
+            <div class="checkout-actions-row">
+              <button type="button" class="btn-checkout-online" id="btnOnlineCheckout" onclick="submitOnlineOrder()">
+                <i class="fas fa-paper-plane"></i>
+                <span class="btn-text">تأكيد الطلب أونلاين الآن</span>
+                <span class="btn-loading" style="display:none;"><i class="fas fa-spinner fa-spin"></i> جارٍ إرسال طلبك للمطعم...</span>
+              </button>
+
+              <button type="button" class="btn-whatsapp-order" id="btnWhatsAppOrder" onclick="submitWhatsAppOrder()">
+                <i class="fab fa-whatsapp" style="font-size: 1.25rem;"></i>
+                <span>إرسال الطلب عبر واتساب</span>
+              </button>
+            </div>
           </form>
+        </div>
+      </div>
+
+      <!-- Order Confirmation Screen (shown after successful online order) -->
+      <div class="order-confirmation-card" id="orderConfirmation" style="display: none;">
+        <div class="confirm-icon-circle">
+          <i class="fas fa-check"></i>
+        </div>
+        <h2 style="font-family: var(--font-display); font-size: 2.1rem; font-weight: 900; color: #FFFFFF; margin-bottom: 0.75rem;">تم استلام طلبك بنجاح!</h2>
+        <div style="display: inline-block; background: var(--bg-surface); border: 1px solid var(--border-card); border-radius: var(--radius-full); padding: 0.5rem 1.75rem; margin-bottom: 1.25rem;">
+          <span style="color: var(--text-muted); font-size: 0.95rem;">رقم طلبك: </span>
+          <strong id="confirmOrderNum" style="color: var(--accent-gold); font-size: 1.5rem; font-family: 'Outfit';">#000</strong>
+        </div>
+        <p style="color: var(--text-muted); font-size: 1.05rem; max-width: 480px; margin: 0 auto 2rem; line-height: 1.6;">طلبك مسجل الآن في مطبخ هشام فؤاد وقيد المراجعة والتجهيز الفوري.</p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+          <a href="orders.html" class="btn-landing-order" style="padding: 0.85rem 2rem; border-radius: var(--radius-full); font-size: 1rem; text-decoration: none;">
+            <i class="fas fa-receipt" style="margin-left: 0.5rem;"></i> متابعة طلباتي
+          </a>
+          <a href="menu.html" class="btn-landing-browse" style="padding: 0.85rem 2rem; border-radius: var(--radius-full); font-size: 1rem; text-decoration: none;">
+            طلب كريب آخر
+          </a>
         </div>
       </div>
     </div>
@@ -395,10 +562,14 @@
   </a>
 
   <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="js/menuData.js"></script>
   <script src="js/cart.js"></script>
   <script src="js/api.js"></script>
   <script>
+    let deliveryMapInstance = null;
+    let deliveryMarker = null;
+
     document.addEventListener('DOMContentLoaded', () => {
       renderCartPage();
       initAuthState();
@@ -512,7 +683,7 @@
             <i class="fas fa-shopping-basket" style="font-size: 2.75rem; color: var(--accent-gold); margin-bottom: 1rem; opacity: 0.7;"></i>
             <h4 style="font-size: 1.2rem; color: #fff; margin-bottom: 0.5rem;">السلة فارغة حالياً</h4>
             <p>يمكنك استكشاف قائمة الطعام واختيار أصناف الكريب المفضلة لديك.</p>
-            <a href="menu.html" class="btn-landing-order" style="display:inline-flex; margin-top: 1.25rem; padding: 0.75rem 1.75rem; border-radius: var(--radius-full);">تصفح المنيو</a>
+            <a href="menu.html" class="btn-landing-order" style="display:inline-flex; margin-top: 1.25rem; padding: 0.75rem 1.75rem; border-radius: var(--radius-full); text-decoration: none;">تصفح المنيو</a>
           </div>
         `;
         updateSummary(0, 0, 0);
@@ -528,7 +699,7 @@
               <div class="cart-item-customs">+ إضافات: ${item.selectedAddons.map(a => a.name).join('، ')}</div>
             ` : ''}
             ${item.selectedSauces && item.selectedSauces.length > 0 ? `
-              <div class="cart-item-customs">+ صوصات: ${item.selectedSauces.map(s => s.name).join('، ')}</div>
+              <div class="cart-item-customs">+ صصوصات: ${item.selectedSauces.map(s => s.name).join('، ')}</div>
             ` : ''}
             ${item.notes ? `<div style="font-size: 0.78rem; color: var(--accent-gold);">ملاحظة: ${item.notes}</div>` : ''}
             <div class="cart-item-price">${item.totalPrice} ج.م</div>
@@ -556,7 +727,77 @@
       document.getElementById('sum-total').textContent = `${total} ج.م`;
     }
 
-    async function submitWhatsAppOrder() {
+    /* ---- GPS Location Picker ---- */
+    function initGpsLocation() {
+      const btnGps = document.getElementById('btnGpsLocation');
+      const mapContainer = document.getElementById('mapPickerContainer');
+      const addressInput = document.getElementById('cust-address');
+      const mapLocationInput = document.getElementById('cust-map-location');
+      const coordsText = document.getElementById('mapCoordsText');
+
+      if (!navigator.geolocation) {
+        alert('المتصفح لا يدعم خدمة تحديد الموقع الجغرافي GPS');
+        return;
+      }
+
+      if (btnGps) {
+        btnGps.disabled = true;
+        btnGps.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>جارٍ تحديد موقعك...</span>';
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          if (btnGps) {
+            btnGps.disabled = false;
+            btnGps.innerHTML = '<i class="fas fa-check-circle" style="color:#10B981;"></i> <span>تم تحديد موقعك</span>';
+          }
+
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const googleMapsLink = `https://maps.google.com/?q=${lat},${lng}`;
+          if (mapLocationInput) mapLocationInput.value = googleMapsLink;
+          if (coordsText) coordsText.textContent = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+
+          if (mapContainer) mapContainer.style.display = 'block';
+
+          if (typeof L !== 'undefined') {
+            if (!deliveryMapInstance) {
+              deliveryMapInstance = L.map('deliveryMap').setView([lat, lng], 16);
+              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+              }).addTo(deliveryMapInstance);
+
+              deliveryMarker = L.marker([lat, lng], { draggable: true }).addTo(deliveryMapInstance);
+              deliveryMarker.on('dragend', () => {
+                const markerPos = deliveryMarker.getLatLng();
+                const updatedLink = `https://maps.google.com/?q=${markerPos.lat},${markerPos.lng}`;
+                if (mapLocationInput) mapLocationInput.value = updatedLink;
+                if (coordsText) coordsText.textContent = `${markerPos.lat.toFixed(5)}, ${markerPos.lng.toFixed(5)}`;
+              });
+            } else {
+              deliveryMapInstance.setView([lat, lng], 16);
+              deliveryMarker.setLatLng([lat, lng]);
+              deliveryMapInstance.invalidateSize();
+            }
+          }
+
+          if (addressInput && (!addressInput.value || addressInput.value.trim().length === 0)) {
+            addressInput.value = 'موقعي الحالي عبر الـ GPS';
+          }
+        },
+        (err) => {
+          if (btnGps) {
+            btnGps.disabled = false;
+            btnGps.innerHTML = '<i class="fas fa-location-crosshairs"></i> <span>تحديد موقعي بالـ GPS</span>';
+          }
+          alert('تعذر جلب موقعك بالـ GPS. يرجى تفعيل إذن الوصول للموقع في إعدادات المتصفح.');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    }
+
+    /* ---- 1. Online System Order (Direct to Kitchen & Cashier Dashboard) ---- */
+    async function submitOnlineOrder() {
       // 1. Strict Guest Ordering Prevention
       if (!window.HeshamFouadAPI || !window.HeshamFouadAPI.isLoggedIn()) {
         alert('عفواً، لا يمكن إتمام الطلب كزائر!\nيجب تسجيل الدخول أو إنشاء حساب جديد لضمان بياناتك وتوصيل طلبك.');
@@ -565,8 +806,8 @@
       }
 
       const cart = window.HeshamFouadCart.getCart();
-      if (cart.length === 0) {
-        alert('سلة المشتريات فارغة! يرجى اختيار الأصناف أولاً من المنيو.');
+      if (!cart || cart.length === 0) {
+        alert('سلة المشتريات فارغة! يرجى اختيار أصناف الكريب من المنيو أولاً.');
         return;
       }
 
@@ -574,6 +815,7 @@
       const phone = document.getElementById('cust-phone').value.trim();
       const address = document.getElementById('cust-address').value.trim();
       const notes = document.getElementById('cust-notes').value.trim();
+      const mapLocation = document.getElementById('cust-map-location') ? document.getElementById('cust-map-location').value.trim() : '';
 
       if (!name || name.length < 3) {
         alert('من فضلك ادخل الاسم بالكامل ثلاثي.');
@@ -594,20 +836,117 @@
         return;
       }
 
-      const submitBtn = document.querySelector('.btn-whatsapp-order');
+      const submitBtn = document.getElementById('btnOnlineCheckout');
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري حفظ الطلب بالسيستم وتجهيزه...';
+        submitBtn.querySelector('.btn-text').style.display = 'none';
+        submitBtn.querySelector('.btn-loading').style.display = 'inline-flex';
       }
 
-      let orderNumber = '';
-
-      // 2. Register order securely in database with authenticated token
       try {
         const apiRes = await window.HeshamFouadAPI.createOrder({
           customerName: name,
           customerPhone: cleanPhone,
           deliveryAddress: address,
+          mapLocation,
+          notes,
+          items: cart.map(i => ({
+            itemId: i.itemId,
+            name: i.name,
+            quantity: i.quantity,
+            unitPrice: i.unitPrice,
+            selectedAddons: i.selectedAddons || [],
+            selectedSauces: i.selectedSauces || [],
+            notes: i.notes || ''
+          }))
+        });
+
+        if (apiRes && apiRes.success && apiRes.order) {
+          // Clear Cart
+          window.HeshamFouadCart.clearCart();
+
+          // Display Confirmation View
+          const cartGrid = document.querySelector('.cart-grid');
+          const titleBlock = document.querySelector('.menu-title-block');
+          const confirmCard = document.getElementById('orderConfirmation');
+          const orderNumEl = document.getElementById('confirmOrderNum');
+
+          if (cartGrid) cartGrid.style.display = 'none';
+          if (titleBlock) titleBlock.style.display = 'none';
+          if (orderNumEl) orderNumEl.textContent = `#${apiRes.order.orderNumber}`;
+          if (confirmCard) {
+            confirmCard.style.display = 'block';
+            confirmCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        } else {
+          throw new Error(apiRes.message || 'حدث خطأ في استلام الطلب من السيرفر');
+        }
+      } catch (err) {
+        console.error('Submit order error:', err);
+        alert(err.message || 'حدث خطأ أثناء إرسال الطلب. تأكد من اتصال الإنترنت وحاول مجدداً.');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.querySelector('.btn-text').style.display = 'inline-flex';
+          submitBtn.querySelector('.btn-loading').style.display = 'none';
+        }
+      }
+    }
+
+    /* ---- 2. WhatsApp Order Checkout ---- */
+    async function submitWhatsAppOrder() {
+      // 1. Strict Guest Ordering Prevention
+      if (!window.HeshamFouadAPI || !window.HeshamFouadAPI.isLoggedIn()) {
+        alert('عفواً، لا يمكن إتمام الطلب كزائر!\nيجب تسجيل الدخول أو إنشاء حساب جديد لضمان بياناتك وتوصيل طلبك.');
+        window.location.href = 'auth.html?returnTo=cart.html';
+        return;
+      }
+
+      const cart = window.HeshamFouadCart.getCart();
+      if (cart.length === 0) {
+        alert('سلة المشتريات فارغة! يرجى اختيار الأصناف أولاً من المنيو.');
+        return;
+      }
+
+      const name = document.getElementById('cust-name').value.trim();
+      const phone = document.getElementById('cust-phone').value.trim();
+      const address = document.getElementById('cust-address').value.trim();
+      const notes = document.getElementById('cust-notes').value.trim();
+      const mapLocation = document.getElementById('cust-map-location') ? document.getElementById('cust-map-location').value.trim() : '';
+
+      if (!name || name.length < 3) {
+        alert('من فضلك ادخل الاسم بالكامل ثلاثي.');
+        document.getElementById('cust-name').focus();
+        return;
+      }
+
+      const cleanPhone = phone.replace(/[\s-]/g, '');
+      if (!cleanPhone || !/^01[0125][0-9]{8}$/.test(cleanPhone)) {
+        alert('من فضلك ادخل رقم موبايل مصري صحيح مكون من 11 رقماً يبدأ بـ 01.');
+        document.getElementById('cust-phone').focus();
+        return;
+      }
+
+      if (!address || address.length < 5) {
+        alert('من فضلك ادخل عنوان التوصيل بالتفصيل بأسيوط (الشارع، رقم العمارة، الشقة).');
+        document.getElementById('cust-address').focus();
+        return;
+      }
+
+      const submitBtn = document.getElementById('btnWhatsAppOrder');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>جاري حفظ الطلب بالسيستم...</span>';
+      }
+
+      let orderNumber = '';
+
+      // Register in DB first so it enters cashier dashboard
+      try {
+        const apiRes = await window.HeshamFouadAPI.createOrder({
+          customerName: name,
+          customerPhone: cleanPhone,
+          deliveryAddress: address,
+          mapLocation,
           notes,
           items: cart.map(i => ({
             itemId: i.itemId,
@@ -624,32 +963,28 @@
           orderNumber = apiRes.order.orderNumber;
         }
       } catch (err) {
-        console.error('Error saving order to DB:', err);
-        alert(err.message || 'حدث خطأ في حفظ الطلب. تأكد من اتصالك بالإنترنت وسجل دخولك ثانية.');
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = '<i class="fab fa-whatsapp" style="font-size: 1.3rem;"></i> <span>إرسال الطلب عبر واتساب مباشرة</span>';
-        }
-        return;
+        console.error('Error saving order to DB before WhatsApp:', err);
       }
 
-      // 3. Prepare official WhatsApp message with verified order number
-      const customerInfo = { name, phone: cleanPhone, address, notes };
+      // Prepare official WhatsApp message with verified order number
+      const customerInfo = { name, phone: cleanPhone, address, notes, mapLocation };
       let url = window.HeshamFouadCart.formatWhatsAppOrder(customerInfo);
       if (orderNumber) {
         url += encodeURIComponent(`\n*رقم الأوردر المعتمد بالسيستم:* #${orderNumber}`);
+      }
+      if (mapLocation) {
+        url += encodeURIComponent(`\n*الموقع بالـ GPS:* ${mapLocation}`);
       }
 
       // Clear cart
       window.HeshamFouadCart.clearCart();
 
-      // Reset button
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fab fa-whatsapp" style="font-size: 1.3rem;"></i> <span>إرسال الطلب عبر واتساب مباشرة</span>';
+        submitBtn.innerHTML = '<i class="fab fa-whatsapp" style="font-size: 1.25rem;"></i> <span>إرسال الطلب عبر واتساب</span>';
       }
 
-      // Open WhatsApp and redirect user to my orders tracking page
+      // Open WhatsApp and redirect to orders
       window.open(url, '_blank');
       window.location.href = 'orders.html';
     }
