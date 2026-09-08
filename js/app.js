@@ -45,25 +45,67 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnQtyPlus = document.getElementById('btnQtyPlus');
   const btnConfirmAddToCart = document.getElementById('btnConfirmAddToCart');
 
+  // Mouse Spotlight Tracking
+  window.addEventListener('mousemove', (e) => {
+    document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+    document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+  });
+
   // Initialize
   initVideoReels();
   renderMenuItems();
   setupEventListeners();
+  initNavAuthState();
 
   /* ==========================================================================
-     1. Live Video Reels (3 Side-by-Side Videos at top of Menu)
+     1. Live Video Reels (3 Side-by-Side Videos at top of Menu + Tap to Play)
      ========================================================================== */
   function initVideoReels() {
     const reelCards = document.querySelectorAll('.reel-item-card');
     reelCards.forEach(card => {
       const video = card.querySelector('video');
+      const videoBox = card.querySelector('.reel-video-box');
       const audioBtn = card.querySelector('.btn-reel-audio-toggle');
       const playBtn = card.querySelector('.btn-reel-play-pause');
-      if (!video) return;
+      if (!video || !videoBox) return;
 
-      // Autoplay muted loop on visible/hover
+      // Ensure muted by default for autoplay compliance
+      video.muted = true;
+      video.setAttribute('muted', '');
+      video.setAttribute('playsinline', '');
+      video.setAttribute('webkit-playsinline', '');
+
+      // Video state event synchronization
+      video.addEventListener('play', () => {
+        videoBox.classList.add('playing');
+        if (playBtn) playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+      });
+
+      video.addEventListener('pause', () => {
+        videoBox.classList.remove('playing');
+        if (playBtn) playBtn.innerHTML = '<i class="fas fa-play"></i>';
+      });
+
+      video.addEventListener('ended', () => {
+        videoBox.classList.remove('playing');
+        if (playBtn) playBtn.innerHTML = '<i class="fas fa-play"></i>';
+      });
+
+      // Tap anywhere on video box to toggle play/pause
+      videoBox.addEventListener('click', (e) => {
+        if (e.target.closest('.btn-reel-audio-toggle')) return;
+        if (video.paused) {
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      });
+
+      // Mouse hover play preview for desktop
       card.addEventListener('mouseenter', () => {
-        video.play().catch(() => {});
+        if (video.paused) {
+          video.play().catch(() => {});
+        }
       });
 
       if (playBtn) {
@@ -71,10 +113,8 @@ document.addEventListener('DOMContentLoaded', () => {
           e.stopPropagation();
           if (video.paused) {
             video.play().catch(() => {});
-            playBtn.innerHTML = '<i class="fas fa-pause"></i>';
           } else {
             video.pause();
-            playBtn.innerHTML = '<i class="fas fa-play"></i>';
           }
         });
       }
@@ -87,7 +127,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (v !== video) {
               v.muted = true;
               const b = v.parentElement.querySelector('.btn-reel-audio-toggle');
-              if (b) b.innerHTML = '<i class="fas fa-volume-mute"></i>';
+              if (b) {
+                b.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                b.classList.remove('active');
+              }
             }
           });
 
@@ -102,7 +145,27 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
       }
+
+      // Try autoplay on load
+      video.play().catch(() => {});
     });
+
+    // Intersection observer for viewport autoplay
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          const video = entry.target.querySelector('video');
+          if (!video) return;
+          if (entry.isIntersecting) {
+            video.play().catch(() => {});
+          } else {
+            video.pause();
+          }
+        });
+      }, { threshold: 0.4 });
+
+      reelCards.forEach(card => observer.observe(card));
+    }
   }
 
   /* ==========================================================================
@@ -146,10 +209,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Category dictionary for badges
     const catMap = {
-      signature: { name: 'ميكس الوحش', icon: 'fa-crown', color: '#F59E0B' },
+      signature: { name: 'ميكس الوحش', icon: 'fa-crown', color: '#F5A623' },
       chicken: { name: 'دجاج بلدي', icon: 'fa-drumstick-bite', color: '#10B981' },
       meat: { name: 'لحوم بلدي', icon: 'fa-bacon', color: '#EF4444' },
-      fries: { name: 'بطاطس وجبن', icon: 'fa-cheese', color: '#F59E0B' },
+      fries: { name: 'بطاطس وجبن', icon: 'fa-cheese', color: '#F5A623' },
       sweet: { name: 'كريب حلو', icon: 'fa-cookie-bite', color: '#EC4899' },
       sauces: { name: 'صوصات وإكسترا', icon: 'fa-pepper-hot', color: '#8B5CF6' }
     };
@@ -406,6 +469,78 @@ document.addEventListener('DOMContentLoaded', () => {
     // Confirm add to cart
     if (btnConfirmAddToCart) {
       btnConfirmAddToCart.addEventListener('click', confirmAddToCart);
+    }
+  }
+
+  /* ==========================================================================
+     Navbar User Dropdown State
+     ========================================================================== */
+  function initNavAuthState() {
+    if (typeof window.HeshamFouadAPI === 'undefined') return;
+    const authContainer = document.getElementById('navAuthContainer');
+    if (!authContainer) return;
+
+    if (window.HeshamFouadAPI.isLoggedIn()) {
+      const user = window.HeshamFouadAPI.getUser();
+      const displayName = user ? (user.displayName || user.username) : 'حسابي';
+
+      authContainer.innerHTML = `
+        <div class="nav-user-dropdown" id="navUserDropdownWrap">
+          <button type="button" class="nav-auth-btn" id="navUserBtn" aria-label="قائمة الحساب">
+            <i class="fas fa-crown" style="color:var(--accent-gold);"></i>
+            <span>${displayName}</span>
+            <i class="fas fa-chevron-down" style="font-size:0.75rem;"></i>
+          </button>
+          <div class="user-dropdown-menu" id="userDropdownMenu">
+            <a href="orders.html" class="dropdown-item">
+              <i class="fas fa-receipt" style="color:var(--accent-gold);"></i>
+              <span>طلباتي</span>
+            </a>
+            <button type="button" class="dropdown-item" id="btnChangePwModal">
+              <i class="fas fa-key" style="color:var(--primary-light);"></i>
+              <span>تغيير كلمة المرور</span>
+            </button>
+            <button type="button" class="dropdown-item logout-item" id="btnLogoutCustomer">
+              <i class="fas fa-sign-out-alt"></i>
+              <span>تسجيل الخروج</span>
+            </button>
+          </div>
+        </div>
+      `;
+
+      const userBtn = document.getElementById('navUserBtn');
+      const menu = document.getElementById('userDropdownMenu');
+      const wrap = document.getElementById('navUserDropdownWrap');
+
+      if (userBtn && menu) {
+        userBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          menu.classList.toggle('show');
+        });
+
+        document.getElementById('btnChangePwModal')?.addEventListener('click', () => {
+          menu.classList.remove('show');
+          window.HeshamFouadAPI.openChangePasswordModal();
+        });
+
+        document.getElementById('btnLogoutCustomer')?.addEventListener('click', () => {
+          window.HeshamFouadAPI.logout();
+        });
+
+        document.addEventListener('click', (e) => {
+          if (wrap && !wrap.contains(e.target)) {
+            menu.classList.remove('show');
+          }
+        });
+      }
+    } else {
+      authContainer.innerHTML = `
+        <a href="auth.html?returnTo=menu.html" class="nav-auth-btn" id="navAuthBtn" aria-label="تسجيل الدخول">
+          <i class="fas fa-user"></i>
+          <span>دخول</span>
+        </a>
+      `;
     }
   }
 
