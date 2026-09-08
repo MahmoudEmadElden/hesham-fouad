@@ -117,12 +117,12 @@
 
     if (soundEnabled) {
       soundBtn.classList.add('active');
-      soundIcon.textContent = '🔊';
+      soundIcon.innerHTML = '<i class="fas fa-volume-up"></i>';
       soundLabel.textContent = 'الصوت مفعل';
       playNotificationSound();
     } else {
       soundBtn.classList.remove('active');
-      soundIcon.textContent = '🔇';
+      soundIcon.innerHTML = '<i class="fas fa-volume-mute"></i>';
       soundLabel.textContent = 'تفعيل الصوت';
     }
   }
@@ -145,7 +145,7 @@
     const formattedShift = formatDateTimeArabic(shiftStart);
 
     const confirmed = confirm(
-      `⚠️ هل أنت متأكد من تصفير الوردية وبدء شيفت جديد؟\n\nالوردية السابقة بدأت: ${formattedShift}\n\nسيتم تصفير جميع العدادات وبدء حساب الأوردرات من اللحظة الحالية الآن.`
+      `هل أنت متأكد من تصفير الوردية وبدء شيفت جديد؟\n\nالوردية السابقة بدأت: ${formattedShift}\n\nسيتم تصفير جميع العدادات وبدء حساب الأوردرات من اللحظة الحالية الآن.`
     );
     if (!confirmed) return;
 
@@ -234,13 +234,13 @@
 
     activeFilterBanner.style.display = 'block';
     if (currentPeriod === 'today') {
-      activeFilterBanner.textContent = '📅 عرض جميع طلبات اليوم كاملاً (من 12:00 منتصف الليل)';
+      activeFilterBanner.textContent = 'عرض جميع طلبات اليوم كاملاً (من 12:00 منتصف الليل)';
     } else if (currentPeriod === 'yesterday') {
-      activeFilterBanner.textContent = '📅 عرض طلبات الأمس بالكامل';
+      activeFilterBanner.textContent = 'عرض طلبات الأمس بالكامل';
     } else if (currentPeriod === 'all') {
-      activeFilterBanner.textContent = '🌐 عرض السجل التاريخي الكامل لجميع الطلبات';
+      activeFilterBanner.textContent = 'عرض السجل التاريخي الكامل لجميع الطلبات';
     } else if (currentPeriod === 'custom' && customStartDate && customEndDate) {
-      activeFilterBanner.textContent = `🔍 فلترة مخصصة: من (${formatDateTimeArabic(customStartDate)}) إلى (${formatDateTimeArabic(customEndDate)})`;
+      activeFilterBanner.textContent = `فلترة مخصصة: من (${formatDateTimeArabic(customStartDate)}) إلى (${formatDateTimeArabic(customEndDate)})`;
     }
   }
 
@@ -516,7 +516,7 @@
         ` : ''}
 
         <div style="text-align: center; border-top: 1px dashed #000; padding-top: 5px; font-size: 10px;">
-          <p style="margin: 0;">شكراً لطلبكم من هشام فؤاد ملك الكريب 👑</p>
+          <p style="margin: 0;">شكراً لطلبكم من هشام فؤاد ملك الكريب</p>
         </div>
       `;
 
@@ -573,7 +573,7 @@
     try {
       const res = await window.HeshamFouadAPI.changePassword(currentPassword, newPassword);
       if (res.success) {
-        pwSuccess.textContent = 'تم تغيير كلمة المرور بنجاح ✅';
+        pwSuccess.textContent = 'تم تغيير كلمة المرور بنجاح';
         setTimeout(() => {
           closePasswordModal();
         }, 1500);
