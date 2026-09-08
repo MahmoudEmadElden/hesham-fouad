@@ -144,6 +144,7 @@
     if (params.page) query.set('page', params.page);
     if (params.limit) query.set('limit', params.limit);
     if (params.status) query.set('status', params.status);
+    if (params.period) query.set('period', params.period);
     if (params.startDate) query.set('startDate', params.startDate);
     if (params.endDate) query.set('endDate', params.endDate);
     if (params.all) query.set('all', params.all);
@@ -165,12 +166,21 @@
 
   async function getStats(params = {}) {
     const query = new URLSearchParams();
+    if (params.period) query.set('period', params.period);
     if (params.startDate) query.set('startDate', params.startDate);
     if (params.endDate) query.set('endDate', params.endDate);
     if (params.all) query.set('all', params.all);
 
     const qs = query.toString();
     return await request(`/orders/stats${qs ? '?' + qs : ''}`);
+  }
+
+  async function resetShift() {
+    return await request('/orders/shift', { method: 'POST' });
+  }
+
+  async function getShift() {
+    return await request('/orders/shift', { method: 'GET' });
   }
 
   /* ===========================
@@ -303,6 +313,8 @@
     getOrders,
     getOrderById,
     updateOrderStatus,
-    getStats
+    getStats,
+    resetShift,
+    getShift
   };
 })();
