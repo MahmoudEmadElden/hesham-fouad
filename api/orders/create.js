@@ -104,7 +104,7 @@ module.exports = async function handler(req, res) {
 
     const user = await User.findById(decoded.userId).select('displayName username phone address');
 
-    const { items, notes, deliveryAddress: inputAddress, customerPhone: inputPhone, customerName: inputName } = req.body;
+    const { items, notes, deliveryAddress: inputAddress, customerPhone: inputPhone, customerName: inputName, mapLocation } = req.body;
 
     const customerName = (inputName && inputName.trim()) || (user ? (user.displayName || user.username) : '');
     const customerPhone = (inputPhone && inputPhone.trim()) || (user ? user.phone : '');
@@ -193,6 +193,7 @@ module.exports = async function handler(req, res) {
       customerName: customerName.trim(),
       customerPhone: cleanPhone,
       deliveryAddress: deliveryAddress.trim(),
+      mapLocation: mapLocation ? mapLocation.trim() : '',
       items: validatedItems,
       subtotal,
       deliveryFee,
