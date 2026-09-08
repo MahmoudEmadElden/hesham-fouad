@@ -996,6 +996,7 @@ button {
   aspect-ratio: 9/13;
   background: #000;
   overflow: hidden;
+  cursor: pointer;
 }
 
 .reel-video-box video {
@@ -1003,6 +1004,36 @@ button {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.reel-center-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: rgba(3, 18, 21, 0.75);
+  border: 2px solid var(--accent-gold);
+  color: var(--accent-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  padding-left: 4px;
+  box-shadow: 0 0 25px rgba(245, 166, 35, 0.45);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+  transition: all 0.25s ease;
+  z-index: 6;
+  opacity: 1;
+}
+
+.reel-video-box.playing .reel-center-play {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(1.2);
+  pointer-events: none;
 }
 
 .btn-reel-audio-toggle {
