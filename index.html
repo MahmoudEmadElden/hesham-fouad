@@ -47,9 +47,9 @@
           <span class="time-text-digits">12:00 م - 3:00 ص</span>
         </div>
 
-        <a href="tel:01554006656" class="nav-phone-btn" title="اتصل بالمطعم">
+        <a href="tel:01038945555" class="nav-phone-btn" title="اتصل بالمطعم">
           <i class="fas fa-phone-alt"></i>
-          <span>01554006656</span>
+          <span>01038945555</span>
         </a>
 
         <!-- Cart Icon (Hidden for guests on landing page, visible when logged in) -->
@@ -127,7 +127,7 @@
             </div>
             <div class="action-card-content">
               <span class="action-card-title">اطلب دليفري سريع</span>
-              <span class="action-card-desc">واتساب ومكالمات 01554006656</span>
+              <span class="action-card-desc">واتساب 01554006656 • دليفري 01038945555</span>
             </div>
           </a>
         </div>
@@ -148,7 +148,8 @@
           <!-- Reel 1 -->
           <div class="reel-item-card">
             <div class="reel-video-box">
-              <video src="assets/videos/reel-1.mp4" playsinline loop muted preload="metadata"></video>
+              <video src="assets/videos/reel-1.mp4" poster="assets/images/crunchy-chicken-cheese.png" playsinline webkit-playsinline loop muted autoplay preload="auto"></video>
+              <div class="reel-center-play" aria-hidden="true"><i class="fas fa-play"></i></div>
               <button class="btn-reel-audio-toggle" aria-label="تشغيل / كتم الصوت"><i class="fas fa-volume-mute"></i></button>
               <button class="btn-reel-play-pause" aria-label="تشغيل / إيقاف"><i class="fas fa-play"></i></button>
             </div>
@@ -160,7 +161,8 @@
           <!-- Reel 2 -->
           <div class="reel-item-card">
             <div class="reel-video-box">
-              <video src="assets/videos/reel-2.mp4" playsinline loop muted preload="metadata"></video>
+              <video src="assets/videos/reel-2.mp4" poster="assets/images/crepe-cone-loaded.png" playsinline webkit-playsinline loop muted autoplay preload="auto"></video>
+              <div class="reel-center-play" aria-hidden="true"><i class="fas fa-play"></i></div>
               <button class="btn-reel-audio-toggle" aria-label="تشغيل / كتم الصوت"><i class="fas fa-volume-mute"></i></button>
               <button class="btn-reel-play-pause" aria-label="تشغيل / إيقاف"><i class="fas fa-play"></i></button>
             </div>
@@ -172,7 +174,8 @@
           <!-- Reel 3 -->
           <div class="reel-item-card">
             <div class="reel-video-box">
-              <video src="assets/videos/reel-3.mp4" playsinline loop muted preload="metadata"></video>
+              <video src="assets/videos/reel-3.mp4" poster="assets/images/crepe-cross-section.png" playsinline webkit-playsinline loop muted autoplay preload="auto"></video>
+              <div class="reel-center-play" aria-hidden="true"><i class="fas fa-play"></i></div>
               <button class="btn-reel-audio-toggle" aria-label="تشغيل / كتم الصوت"><i class="fas fa-volume-mute"></i></button>
               <button class="btn-reel-play-pause" aria-label="تشغيل / إيقاف"><i class="fas fa-play"></i></button>
             </div>
@@ -338,21 +341,53 @@
       }
     }
 
-    // Video Reels Interactivity (Autoplay muted + audio & play/pause controls)
+    // Video Reels Interactivity (Autoplay muted + audio & play/pause controls + Tap to Play)
     function initVideoReels() {
       const reelCards = document.querySelectorAll('.reel-item-card');
       reelCards.forEach(card => {
         const video = card.querySelector('video');
+        const videoBox = card.querySelector('.reel-video-box');
         const audioBtn = card.querySelector('.btn-reel-audio-toggle');
         const playBtn = card.querySelector('.btn-reel-play-pause');
-        if (!video) return;
+        if (!video || !videoBox) return;
 
-        // Try autoplay muted
+        // Ensure muted by default for autoplay compliance
         video.muted = true;
-        video.play().catch(() => {});
+        video.setAttribute('muted', '');
+        video.setAttribute('playsinline', '');
+        video.setAttribute('webkit-playsinline', '');
 
+        // Video state event synchronization
+        video.addEventListener('play', () => {
+          videoBox.classList.add('playing');
+          if (playBtn) playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        });
+
+        video.addEventListener('pause', () => {
+          videoBox.classList.remove('playing');
+          if (playBtn) playBtn.innerHTML = '<i class="fas fa-play"></i>';
+        });
+
+        video.addEventListener('ended', () => {
+          videoBox.classList.remove('playing');
+          if (playBtn) playBtn.innerHTML = '<i class="fas fa-play"></i>';
+        });
+
+        // Tap anywhere on video box to toggle play/pause
+        videoBox.addEventListener('click', (e) => {
+          if (e.target.closest('.btn-reel-audio-toggle')) return;
+          if (video.paused) {
+            video.play().catch(() => {});
+          } else {
+            video.pause();
+          }
+        });
+
+        // Mouse hover play preview for desktop
         card.addEventListener('mouseenter', () => {
-          video.play().catch(() => {});
+          if (video.paused) {
+            video.play().catch(() => {});
+          }
         });
 
         if (playBtn) {
@@ -360,10 +395,8 @@
             e.stopPropagation();
             if (video.paused) {
               video.play().catch(() => {});
-              playBtn.innerHTML = '<i class="fas fa-pause"></i>';
             } else {
               video.pause();
-              playBtn.innerHTML = '<i class="fas fa-play"></i>';
             }
           });
         }
@@ -394,7 +427,27 @@
             }
           });
         }
+
+        // Try autoplay on load
+        video.play().catch(() => {});
       });
+
+      // Intersection observer for viewport autoplay
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            const video = entry.target.querySelector('video');
+            if (!video) return;
+            if (entry.isIntersecting) {
+              video.play().catch(() => {});
+            } else {
+              video.pause();
+            }
+          });
+        }, { threshold: 0.4 });
+
+        reelCards.forEach(card => observer.observe(card));
+      }
     }
 
     // Update cart badge if logged in and items exist
