@@ -15,7 +15,6 @@
     primaryPhone: '01554006656',
     secondaryPhone: '01038945555',
     whatsapp: '201554006656',
-    discountNote: 'الأسعار تشمل خصم 15% طوال فترة الافتتاح',
     openingHours: 'يومياً من 12:00 ظهراً حتى 3:00 فجراً',
     deliveryFee: 15,
     minOrder: 50,
@@ -500,7 +499,7 @@
       categoryId: 'sweet',
       name: 'كريب مربى تين صعيدي',
       price: 80,
-      description: 'مربى تين طبيعية ناعمة مع كريمة الباستري والمكسرات.',
+      description: 'مربى تين طبيعية ناعمة مع كريمة باستري والمكسرات.',
       image: 'assets/images/crepe-cross-section.png',
       tags: ['مربى تين']
     }
