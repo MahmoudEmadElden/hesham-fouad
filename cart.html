@@ -735,64 +735,91 @@
       const mapLocationInput = document.getElementById('cust-map-location');
       const coordsText = document.getElementById('mapCoordsText');
 
-      if (!navigator.geolocation) {
-        alert('المتصفح لا يدعم خدمة تحديد الموقع الجغرافي GPS');
-        return;
+      // 1. Instantly open the map container centered on Asyut
+      if (mapContainer) mapContainer.style.display = 'block';
+
+      const defaultLat = 27.1801;
+      const defaultLng = 31.1837;
+
+      function setupOrUpdateMap(lat, lng, isAccurate) {
+        if (typeof L === 'undefined') return;
+
+        if (!deliveryMapInstance) {
+          deliveryMapInstance = L.map('deliveryMap').setView([lat, lng], 16);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+          }).addTo(deliveryMapInstance);
+
+          deliveryMarker = L.marker([lat, lng], { draggable: true }).addTo(deliveryMapInstance);
+
+          function onPosUpdate(pos) {
+            const updatedLink = `https://maps.google.com/?q=${pos.lat},${pos.lng}`;
+            if (mapLocationInput) mapLocationInput.value = updatedLink;
+            if (coordsText) coordsText.textContent = `${pos.lat.toFixed(5)}, ${pos.lng.toFixed(5)}`;
+          }
+
+          deliveryMarker.on('dragend', () => {
+            onPosUpdate(deliveryMarker.getLatLng());
+          });
+
+          deliveryMapInstance.on('click', (e) => {
+            deliveryMarker.setLatLng(e.latlng);
+            onPosUpdate(e.latlng);
+          });
+        } else {
+          deliveryMapInstance.setView([lat, lng], 16);
+          deliveryMarker.setLatLng([lat, lng]);
+          setTimeout(() => deliveryMapInstance.invalidateSize(), 200);
+        }
+
+        const link = `https://maps.google.com/?q=${lat},${lng}`;
+        if (mapLocationInput) mapLocationInput.value = link;
+        if (coordsText) coordsText.textContent = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
       }
+
+      // Open map immediately with Asyut default so user is never blocked
+      setupOrUpdateMap(defaultLat, defaultLng, false);
 
       if (btnGps) {
         btnGps.disabled = true;
-        btnGps.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>جارٍ تحديد موقعك...</span>';
+        btnGps.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>جارٍ التقاط موقعك...</span>';
       }
 
+      if (!navigator.geolocation) {
+        if (btnGps) {
+          btnGps.disabled = false;
+          btnGps.innerHTML = '<i class="fas fa-map-pin"></i> <span>اسحب الدبوس لتحديد مكانك</span>';
+        }
+        return;
+      }
+
+      // Try quick location with fallback (avoids Safari timeout/blocking alert)
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           if (btnGps) {
             btnGps.disabled = false;
-            btnGps.innerHTML = '<i class="fas fa-check-circle" style="color:#10B981;"></i> <span>تم تحديد موقعك</span>';
+            btnGps.innerHTML = '<i class="fas fa-check-circle" style="color:#10B981;"></i> <span>تم تحديد موقعك بدقة</span>';
           }
-
           const lat = pos.coords.latitude;
           const lng = pos.coords.longitude;
-          const googleMapsLink = `https://maps.google.com/?q=${lat},${lng}`;
-          if (mapLocationInput) mapLocationInput.value = googleMapsLink;
-          if (coordsText) coordsText.textContent = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-
-          if (mapContainer) mapContainer.style.display = 'block';
-
-          if (typeof L !== 'undefined') {
-            if (!deliveryMapInstance) {
-              deliveryMapInstance = L.map('deliveryMap').setView([lat, lng], 16);
-              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap'
-              }).addTo(deliveryMapInstance);
-
-              deliveryMarker = L.marker([lat, lng], { draggable: true }).addTo(deliveryMapInstance);
-              deliveryMarker.on('dragend', () => {
-                const markerPos = deliveryMarker.getLatLng();
-                const updatedLink = `https://maps.google.com/?q=${markerPos.lat},${markerPos.lng}`;
-                if (mapLocationInput) mapLocationInput.value = updatedLink;
-                if (coordsText) coordsText.textContent = `${markerPos.lat.toFixed(5)}, ${markerPos.lng.toFixed(5)}`;
-              });
-            } else {
-              deliveryMapInstance.setView([lat, lng], 16);
-              deliveryMarker.setLatLng([lat, lng]);
-              deliveryMapInstance.invalidateSize();
-            }
-          }
+          setupOrUpdateMap(lat, lng, true);
 
           if (addressInput && (!addressInput.value || addressInput.value.trim().length === 0)) {
             addressInput.value = 'موقعي الحالي عبر الـ GPS';
           }
         },
         (err) => {
+          // If denied or timed out, NEVER show an annoying alert popup!
+          // The interactive map is ALREADY open, so user can just drag the pin or click!
           if (btnGps) {
             btnGps.disabled = false;
-            btnGps.innerHTML = '<i class="fas fa-location-crosshairs"></i> <span>تحديد موقعي بالـ GPS</span>';
+            btnGps.innerHTML = '<i class="fas fa-map-marker-alt" style="color:var(--accent-gold);"></i> <span>اسحب الدبوس لتحديد مكانك</span>';
           }
-          alert('تعذر جلب موقعك بالـ GPS. يرجى تفعيل إذن الوصول للموقع في إعدادات المتصفح.');
+          if (coordsText) {
+            coordsText.textContent = 'اسحب الدبوس على الخريطة لتحديد مكانك بدقة في أسيوط';
+          }
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        { enableHighAccuracy: false, timeout: 6000, maximumAge: 300000 }
       );
     }
 
