@@ -1,8 +1,21 @@
+/**
+ * POST /api/auth/login — Login for both customers and admin
+ */
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { connectDB } = require('../_lib/db');
 const User = require('../_lib/models/User');
 const { handleCors } = require('../_lib/auth-middleware');
+
+function getJwtSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.trim() === '') {
+    const err = new Error('JWT_SECRET environment variable is not set');
+    err.statusCode = 500;
+    throw err;
+  }
+  return secret;
+}
 
 module.exports = async function handler(req, res) {
   if (handleCors(req, res)) return;
@@ -25,21 +38,7 @@ module.exports = async function handler(req, res) {
 
     const cleanUsername = username.trim().toLowerCase();
 
-    let user = await User.findOne({ username: cleanUsername });
-
-    const envAdminUser = (process.env.ADMIN_USERNAME || 'admin').toLowerCase();
-    const envAdminPass = process.env.ADMIN_PASSWORD || 'HeshamFouad@2026Admin';
-
-    if (!user && cleanUsername === envAdminUser) {
-      const hashedPassword = await bcrypt.hash(envAdminPass, 10);
-      user = new User({
-        username: envAdminUser,
-        password: hashedPassword,
-        displayName: 'مدير المطعم',
-        role: 'admin'
-      });
-      await user.save();
-    }
+    const user = await User.findOne({ username: cleanUsername });
 
     if (!user) {
       return res.status(401).json({
@@ -57,7 +56,7 @@ module.exports = async function handler(req, res) {
     }
 
     const expiresIn = user.role === 'admin' ? '48h' : '7d';
-    const secret = process.env.JWT_SECRET || 'hesham_fouad_super_secure_jwt_secret_2026_king';
+    const secret = getJwtSecret();
     const token = jwt.sign(
       {
         userId: user._id,

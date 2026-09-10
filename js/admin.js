@@ -1,5 +1,5 @@
-/**
- * Admin & Cashier Dashboard Logic — Hesham Fouad King of Crepe
+﻿/**
+ * Admin & Cashier Dashboard Logic â€” Hesham Fouad King of Crepe
  * Handles login, shift reset, date/time filtering, thermal ticket printing,
  * password change, audio alerts, and real-time order polling.
  */
@@ -56,10 +56,10 @@
   let isFirstLoad = true;
   let isSwitchingPeriod = false;
 
-  const statusLabels = {
+const statusLabels = {
     pending: 'قيد الانتظار',
-    accepted: 'تم القبول',
-    preparing: 'جاري التحضير',
+    accepted: 'تم قبول الطلب',
+    preparing: 'جاري تحضير الكريب',
     ready: 'جاهز للاستلام',
     delivered: 'تم التوصيل',
     cancelled: 'ملغي'
@@ -111,7 +111,7 @@
     });
   }
 
-  function toggleSound() {
+function toggleSound() {
     initAudioContext();
     soundEnabled = !soundEnabled;
 
@@ -123,7 +123,7 @@
     } else {
       soundBtn.classList.remove('active');
       soundIcon.innerHTML = '<i class="fas fa-volume-mute"></i>';
-      soundLabel.textContent = 'تفعيل الصوت';
+      soundLabel.textContent = 'تعطيل الصوت';
     }
   }
 
@@ -144,12 +144,12 @@
     const shiftStart = getShiftStart();
     const formattedShift = formatDateTimeArabic(shiftStart);
 
-    const confirmed = confirm(
-      `هل أنت متأكد من تصفير الوردية وبدء شيفت جديد؟\n\nالوردية السابقة بدأت: ${formattedShift}\n\nسيتم تصفير جميع العدادات وبدء حساب الأوردرات من اللحظة الحالية الآن.`
+const confirmed = confirm(
+      `هل أنت متأكد من تصفير الوردية وبدء شيفت جديدة؟\n\nالوردية الحالية بدأت في: ${formattedShift}\n\nسيتم تصفير جميع العدادات وإخفاء الطلبات من اللوحة الحالية.`
     );
     if (!confirmed) return;
 
-    // 1. Instantly zero-out all stat cards
+// 1. Instantly zero-out all stat cards
     const elOrders = document.getElementById('statTotalOrders');
     const elRev = document.getElementById('statTotalRevenue');
     const elPending = document.getElementById('statPendingOrders');
@@ -160,21 +160,22 @@
     if (elPrep) elPrep.textContent = '0';
 
     // 2. Instantly empty the orders table
-    if (ordersList) {
+if (ordersList) {
       ordersList.innerHTML = `
         <tr>
           <td colspan="7" style="text-align: center; padding: 2.5rem 1rem; color: var(--color-text-muted);">
             <i class="fas fa-check-circle" style="font-size: 2.5rem; color: #10B981; margin-bottom: 0.75rem;"></i>
-            <p style="font-size: 1.1rem; font-weight: 700; color: #FFFFFF;">تم تصفير الوردية وبدء شيفت جديد بنجاح</p>
+            <p style="font-size: 1.1rem; font-weight: 700; color: #FFFFFF;">تم تصفير الوردية وبدء شيفت جديدة بنجاح</p>
             <p style="font-size: 0.88rem; color: #A3C5CD;">في انتظار أول طلب جديد في هذه الوردية...</p>
           </td>
         </tr>
       `;
     }
 
-    // 3. Reset internal tracking & silence alerts
+// 3. Reset internal tracking & silence alerts
     isSwitchingPeriod = true;
     knownOrderIds.clear();
+    alertedOrderIds.clear();
 
     try {
       const res = await window.HeshamFouadAPI.resetShift();
@@ -196,7 +197,7 @@
     shiftTimeDisplay.textContent = formatDateTimeArabic(shiftStart);
   }
 
-  function formatDateTimeArabic(date) {
+function formatDateTimeArabic(date) {
     if (!date) return '';
     const d = new Date(date);
     if (isNaN(d.getTime())) return '';
@@ -231,7 +232,7 @@
     loadStats();
   }
 
-  function updateActiveFilterBanner() {
+function updateActiveFilterBanner() {
     if (!activeFilterBanner) return;
 
     if (currentPeriod === 'shift') {
@@ -241,9 +242,9 @@
 
     activeFilterBanner.style.display = 'block';
     if (currentPeriod === 'today') {
-      activeFilterBanner.textContent = 'عرض جميع طلبات اليوم كاملاً (من 12:00 منتصف الليل)';
+      activeFilterBanner.textContent = 'عرض جموع طلبات اليوم كاملاً (من 12:00 منتصف الليل)';
     } else if (currentPeriod === 'yesterday') {
-      activeFilterBanner.textContent = 'عرض طلبات الأمس بالكامل';
+      activeFilterBanner.textContent = 'عرض طلبات الأمس بالتفصيل';
     } else if (currentPeriod === 'all') {
       activeFilterBanner.textContent = 'عرض السجل التاريخي الكامل لجميع الطلبات';
     } else if (currentPeriod === 'custom' && customStartDate && customEndDate) {
@@ -349,7 +350,7 @@
       const res = await window.HeshamFouadAPI.getStats(params);
       if (!res.success) return;
 
-      const { stats } = res;
+const { stats } = res;
       document.getElementById('statTotalOrders').textContent = stats.totalOrdersToday || 0;
       document.getElementById('statTotalRevenue').textContent = `${stats.totalRevenueToday || 0} ج.م`;
       document.getElementById('statPendingOrders').textContent = stats.pendingOrders || 0;
@@ -365,7 +366,7 @@
   function renderOrdersTable(orders) {
     if (!ordersList) return;
 
-    if (orders.length === 0) {
+if (orders.length === 0) {
       ordersList.innerHTML = `
         <tr>
           <td colspan="7" style="text-align: center; padding: 2.5rem 1rem; color: var(--color-text-muted);">
@@ -377,36 +378,36 @@
       return;
     }
 
-    ordersList.innerHTML = orders.map(order => {
+ordersList.innerHTML = orders.map(order => {
       const dateStr = formatDateTimeArabic(order.createdAt);
       const itemsSummary = (order.items || []).map(i => {
-        let text = `${i.name} (×${i.quantity})`;
+        let text = escapeHtml(i.name) + ' (x' + i.quantity + ')';
         if (i.selectedAddons && i.selectedAddons.length > 0) {
-          text += ` [${i.selectedAddons.map(a => a.name).join('+')}]`;
+          text += ' [' + i.selectedAddons.map(a => escapeHtml(a.name)).join('+') + ']';
         }
         if (i.selectedSauces && i.selectedSauces.length > 0) {
-          text += ` [صوص: ${i.selectedSauces.map(s => s.name).join('+')}]`;
+          text += ' [صلصات: ' + i.selectedSauces.map(s => escapeHtml(s.name)).join('+') + ']';
         }
         if (i.notes) {
-          text += ` (${i.notes})`;
+          text += ' (' + escapeHtml(i.notes) + ')';
         }
         return text;
       }).join('<br>');
 
       return `
         <tr>
-          <td><span class="order-num-tag">#${order.orderNumber}</span></td>
+          <td><span class="order-num-tag">#${escapeHtml(order.orderNumber)}</span></td>
           <td>
-            <strong>${order.customerName}</strong><br>
-            <span style="font-family: 'Outfit'; color: var(--color-accent-gold); font-size: 0.85rem;">${order.customerPhone}</span>
+            <strong>${escapeHtml(order.customerName)}</strong><br>
+            <span style="font-family: 'Outfit'; color: var(--color-accent-gold); font-size: 0.85rem;">${escapeHtml(order.customerPhone)}</span>
           </td>
-          <td><small>${order.deliveryAddress}</small></td>
+          <td><small>${escapeHtml(order.deliveryAddress)}</small></td>
           <td style="font-size: 0.82rem; line-height: 1.5;">${itemsSummary}</td>
           <td>
             <strong style="font-family: 'Outfit'; color: var(--color-accent-gold); font-size: 1.1rem;">${order.totalAmount}</strong> ج.م
           </td>
           <td>
-            <span class="status-badge status-${order.status}">${statusLabels[order.status] || order.status}</span>
+            <span class="status-badge status-${order.status}">${statusLabels[order.status] || escapeHtml(order.status)}</span>
           </td>
           <td>
             <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
@@ -433,6 +434,16 @@
     }).join('');
   }
 
+  function escapeHtml(value) {
+    if (value === null || value === undefined) return '';
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   async function updateStatus(orderId, newStatus) {
     try {
       const res = await window.HeshamFouadAPI.updateOrderStatus(orderId, newStatus);
@@ -441,7 +452,7 @@
         loadStats();
       }
     } catch (err) {
-      alert('حدث خطأ أثناء تحديث حالة الطلب: ' + err.message);
+      alert('Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ ØªØ­Ø¯ÙŠØ« Ø­Ø§Ù„Ø© Ø§Ù„Ø·Ù„Ø¨: ' + err.message);
     }
   }
 
@@ -461,24 +472,24 @@
         document.body.appendChild(printContainer);
       }
 
-      const isKitchen = ticketType === 'kitchen';
-      const ticketTitle = isKitchen ? 'بون تحضير المطبخ' : 'فاتورة العميل — دليفري';
+const isKitchen = ticketType === 'kitchen';
+      const ticketTitle = isKitchen ? 'بون تحضير للمطبخ' : 'فاتورة العميل — توصيل';
 
-      printContainer.innerHTML = `
+printContainer.innerHTML = `
         <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 6px;">
-          <h2 style="margin: 0; font-size: 16px;">هشام فؤاد — ملك الكريب</h2>
-          <p style="margin: 2px 0; font-size: 11px;">أسيوط — شارع المحافظة بجوار الفانوس</p>
+          <h2 style="margin: 0; font-size: 16px;">هشام فؤاد - ملك الكريب</h2>
+          <p style="margin: 2px 0; font-size: 11px;">أسيوط - شارع المحافظة بجوار الفانوس أمام مستشفى طيبة</p>
           <p style="margin: 2px 0; font-size: 11px;">تليفون: 01554006656 / 01038945555</p>
-          <h3 style="margin: 4px 0; font-size: 13px; text-decoration: underline;">${ticketTitle}</h3>
+          <h3 style="margin: 4px 0; font-size: 13px; text-decoration: underline;">${escapeHtml(ticketTitle)}</h3>
         </div>
 
         <div style="font-size: 11px; margin-bottom: 6px;">
-          <div><strong>رقم الأوردر:</strong> #${order.orderNumber}</div>
+          <div><strong>رقم الأوردر:</strong> #${escapeHtml(order.orderNumber)}</div>
           <div><strong>التاريخ:</strong> ${formatDateTimeArabic(order.createdAt)}</div>
-          <div><strong>العميل:</strong> ${order.customerName}</div>
-          <div><strong>الموبايل:</strong> ${order.customerPhone}</div>
-          <div><strong>العنوان:</strong> ${order.deliveryAddress}</div>
-          ${order.notes ? `<div><strong>ملاحظات:</strong> ${order.notes}</div>` : ''}
+          <div><strong>العميل:</strong> ${escapeHtml(order.customerName)}</div>
+          <div><strong>الموبايل:</strong> ${escapeHtml(order.customerPhone)}</div>
+          <div><strong>العنوان:</strong> ${escapeHtml(order.deliveryAddress)}</div>
+          ${order.notes ? `<div><strong>ملاحظات:</strong> ${escapeHtml(order.notes)}</div>` : ''}
         </div>
 
         <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 6px; border-top: 1px dashed #000; border-bottom: 1px dashed #000;">
@@ -493,10 +504,10 @@
             ${(order.items || []).map(item => `
               <tr>
                 <td style="padding: 2px 0;">
-                  <strong>${item.name}</strong>
-                  ${item.selectedAddons && item.selectedAddons.length > 0 ? `<br><small>+ إضافات: ${item.selectedAddons.map(a => a.name).join('، ')}</small>` : ''}
-                  ${item.selectedSauces && item.selectedSauces.length > 0 ? `<br><small>+ صوص: ${item.selectedSauces.map(s => s.name).join('، ')}</small>` : ''}
-                  ${item.notes ? `<br><small>* طلب: ${item.notes}</small>` : ''}
+                  <strong>${escapeHtml(item.name)}</strong>
+                  ${item.selectedAddons && item.selectedAddons.length > 0 ? `<br><small>+ إضافات: ${item.selectedAddons.map(a => escapeHtml(a.name)).join('، ')}</small>` : ''}
+                  ${item.selectedSauces && item.selectedSauces.length > 0 ? `<br><small>+ صلصات: ${item.selectedSauces.map(s => escapeHtml(s.name)).join('، ')}</small>` : ''}
+                  ${item.notes ? `<br><small>* طلب: ${escapeHtml(item.notes)}</small>` : ''}
                 </td>
                 <td style="padding: 2px 0; text-align: center; vertical-align: top;">${item.quantity}</td>
                 ${!isKitchen ? `<td style="padding: 2px 0; text-align: left; vertical-align: top;">${item.totalPrice} ج</td>` : ''}
@@ -523,12 +534,12 @@
         ` : ''}
 
         <div style="text-align: center; border-top: 1px dashed #000; padding-top: 5px; font-size: 10px;">
-          <p style="margin: 0;">شكراً لطلبكم من هشام فؤاد ملك الكريب</p>
+          <p style="margin: 0;">شكراً لطلبك من هشام فؤاد ملك الكريب</p>
         </div>
       `;
 
       window.print();
-    } catch (err) {
+} catch (err) {
       alert('خطأ في تحضير البون للطباعة: ' + err.message);
     }
   }
@@ -615,7 +626,7 @@
           if (res.success) {
             showDashboard();
           }
-        } catch (err) {
+} catch (err) {
           loginError.textContent = err.message || 'بيانات الدخول غير صحيحة';
         }
       });
@@ -654,6 +665,10 @@
         }
         customStartDate = new Date(dtStart.value);
         customEndDate = new Date(dtEnd.value);
+        if (customEndDate < customStartDate) {
+          alert('تاريخ النهاية يجب أن يكون بعد أو يساوي تاريخ البداية');
+          return;
+        }
         updateActiveFilterBanner();
         loadOrders();
         loadStats();
@@ -717,3 +732,6 @@
     resetShift
   };
 })();
+
+
+

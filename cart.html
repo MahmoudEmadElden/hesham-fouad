@@ -7,8 +7,9 @@
   <meta name="description" content="إتمام طلب كريب هشام فؤاد في أسيوط. توصيل سريع ومباشر عبر واتساب أو الدفع عند الاستلام.">
   <meta name="theme-color" content="#0D1518">
 
-  <!-- Favicon -->
+  <!-- Favicon & Manifest -->
   <link rel="icon" type="image/png" href="assets/images/logo.png">
+  <link rel="manifest" href="manifest.json">
 
   <!-- Google Fonts (Cairo & Outfit) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -400,18 +401,18 @@
         <div class="checkout-summary-card">
           <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.25rem; color: #fff;">بيانات التوصيل في أسيوط</h3>
 
-          <!-- Guest Warning Banner -->
-          <div id="authRequiredBanner" class="auth-required-banner">
+          <!-- Account Status / Guest Ordering Banner -->
+          <div id="authRequiredBanner" class="auth-required-banner" style="background: rgba(255, 209, 102, 0.07); border-color: rgba(255, 209, 102, 0.25);">
             <div class="auth-banner-content">
-              <i class="fas fa-lock auth-banner-icon"></i>
+              <i class="fas fa-bolt auth-banner-icon" style="color: var(--accent-gold); background: rgba(255, 209, 102, 0.15);"></i>
               <div>
-                <h4 style="margin:0 0 0.25rem; font-weight:800; color:#fff;">تسجيل الدخول مطلوب للطلب</h4>
-                <p style="margin:0; font-size:0.85rem; color:var(--text-muted);">عفواً، لا يمكن الطلب كزائر لضمان صحة بيانات التوصيل ومتابعة حالة أوردرك.</p>
+                <h4 style="margin:0 0 0.25rem; font-weight:800; color:#fff;">طلب مباشر وسريع بدون انتظار</h4>
+                <p style="margin:0; font-size:0.85rem; color:var(--text-muted);">ادخل اسمك وموبايلك وعنوانك بالأسفل وسيتم تحويل طلبك فوراً لواتساب المطعم.</p>
               </div>
             </div>
-            <a href="auth.html?returnTo=cart.html" class="btn-auth-banner">
-              <i class="fas fa-user-plus"></i>
-              <span>تسجيل الدخول / إنشاء حساب</span>
+            <a href="auth.html?returnTo=cart.html" class="btn-auth-banner" style="font-size: 0.8rem; padding: 0.45rem 1rem;">
+              <i class="fas fa-sign-in-alt"></i>
+              <span>تسجيل الدخول (اختياري)</span>
             </a>
           </div>
 
@@ -478,34 +479,39 @@
               </div>
             </div>
 
-            <!-- Dual Action Buttons -->
+            <!-- Single Primary WhatsApp Checkout Button (Zero Friction) -->
             <div class="checkout-actions-row">
-              <button type="button" class="btn-checkout-online" id="btnOnlineCheckout" onclick="submitOnlineOrder()">
-                <i class="fas fa-paper-plane"></i>
-                <span class="btn-text">تأكيد الطلب أونلاين الآن</span>
-                <span class="btn-loading" style="display:none;"><i class="fas fa-spinner fa-spin"></i> جارٍ إرسال طلبك للمطعم...</span>
-              </button>
-
-              <button type="button" class="btn-whatsapp-order" id="btnWhatsAppOrder" onclick="submitWhatsAppOrder()">
-                <i class="fab fa-whatsapp" style="font-size: 1.25rem;"></i>
-                <span>إرسال الطلب عبر واتساب</span>
+              <button type="button" class="btn-whatsapp-order" id="btnOnlineCheckout" onclick="submitOnlineOrder()" style="width: 100%; padding: 1.15rem 1.5rem; font-size: 1.15rem; font-weight: 900; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: #fff; border: none; border-radius: var(--radius-full); box-shadow: 0 10px 28px rgba(37, 211, 102, 0.45); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.75rem; transition: all 0.25s ease;">
+                <i class="fab fa-whatsapp" style="font-size: 1.45rem;"></i>
+                <span class="btn-text">إرسال وتأكيد الطلب عبر الواتساب الآن 💬</span>
+                <span class="btn-loading" style="display:none;"><i class="fas fa-spinner fa-spin"></i> جاري فتح الواتساب وإرسال الطلب...</span>
               </button>
             </div>
           </form>
         </div>
       </div>
 
-      <!-- Order Confirmation Screen (shown after successful online order) -->
+      <!-- Order Confirmation Screen (shown after successful order) -->
       <div class="order-confirmation-card" id="orderConfirmation" style="display: none;">
         <div class="confirm-icon-circle">
           <i class="fas fa-check"></i>
         </div>
-        <h2 style="font-family: var(--font-display); font-size: 2.1rem; font-weight: 900; color: #FFFFFF; margin-bottom: 0.75rem;">تم استلام طلبك بنجاح!</h2>
+        <h2 style="font-family: var(--font-display); font-size: 2.1rem; font-weight: 900; color: #FFFFFF; margin-bottom: 0.75rem;">تم تجهيز طلبك بنجاح!</h2>
         <div style="display: inline-block; background: var(--bg-surface); border: 1px solid var(--border-card); border-radius: var(--radius-full); padding: 0.5rem 1.75rem; margin-bottom: 1.25rem;">
           <span style="color: var(--text-muted); font-size: 0.95rem;">رقم طلبك: </span>
-          <strong id="confirmOrderNum" style="color: var(--accent-gold); font-size: 1.5rem; font-family: 'Outfit';">#000</strong>
+          <strong id="confirmOrderNum" style="color: var(--accent-gold); font-size: 1.5rem; font-family: 'Outfit';">#HF-000</strong>
         </div>
-        <p style="color: var(--text-muted); font-size: 1.05rem; max-width: 480px; margin: 0 auto 2rem; line-height: 1.6;">طلبك مسجل الآن في مطبخ هشام فؤاد وقيد المراجعة والتجهيز الفوري.</p>
+        <p style="color: var(--text-muted); font-size: 1.05rem; max-width: 520px; margin: 0 auto 1.5rem; line-height: 1.6;">تم تحويلك إلى محادثة واتساب مطعم هشام فؤاد. يرجى الضغط على زر "إرسال" داخل المحادثة ليصل الأوردر إلى مطبخنا فوراً!</p>
+
+        <!-- Direct WhatsApp CTA Box -->
+        <div id="confirmWaActionBlock" style="margin: 1.5rem auto 2rem; max-width: 480px;">
+          <a href="#" id="confirmWaDirectBtn" target="_blank" class="btn-whatsapp-order" style="display: flex; align-items: center; justify-content: center; gap: 0.75rem; padding: 1rem 1.5rem; font-size: 1.1rem; text-decoration: none; border-radius: var(--radius-full); box-shadow: 0 8px 24px rgba(37, 211, 102, 0.35); background: linear-gradient(135deg, #25D366, #128C7E); color: #fff; font-weight: 800;">
+            <i class="fab fa-whatsapp" style="font-size: 1.5rem;"></i>
+            <span>فتح محادثة الواتساب وتأكيد الطلب 💬</span>
+          </a>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.75rem;">إذا لم يفتح الواتساب تلقائياً، اضغط على الزر الأخضر أعلاه لإرسال تفاصيل الأوردر لمطبخ هشام فؤاد مباشرة.</p>
+        </div>
+
         <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
           <a href="orders.html" class="btn-landing-order" style="padding: 0.85rem 2rem; border-radius: var(--radius-full); font-size: 1rem; text-decoration: none;">
             <i class="fas fa-receipt" style="margin-left: 0.5rem;"></i> متابعة طلباتي
@@ -823,15 +829,8 @@
       );
     }
 
-    /* ---- 1. Online System Order (Direct to Kitchen & Cashier Dashboard) ---- */
+    /* ---- Unified Auto-WhatsApp Online Order Engine ---- */
     async function submitOnlineOrder() {
-      // 1. Strict Guest Ordering Prevention
-      if (!window.HeshamFouadAPI || !window.HeshamFouadAPI.isLoggedIn()) {
-        alert('عفواً، لا يمكن إتمام الطلب كزائر!\nيجب تسجيل الدخول أو إنشاء حساب جديد لضمان بياناتك وتوصيل طلبك.');
-        window.location.href = 'auth.html?returnTo=cart.html';
-        return;
-      }
-
       const cart = window.HeshamFouadCart.getCart();
       if (!cart || cart.length === 0) {
         alert('سلة المشتريات فارغة! يرجى اختيار أصناف الكريب من المنيو أولاً.');
@@ -864,157 +863,106 @@
       }
 
       const submitBtn = document.getElementById('btnOnlineCheckout');
+      const waBtn = document.getElementById('btnWhatsAppOrder');
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.querySelector('.btn-text').style.display = 'none';
         submitBtn.querySelector('.btn-loading').style.display = 'inline-flex';
       }
+      if (waBtn) waBtn.disabled = true;
 
+      // Unique Order Number
+      let orderNumber = 'HF-' + Math.floor(1000 + Math.random() * 9000);
+
+      // Background attempt to log into database if logged in or server reachable
       try {
-        const apiRes = await window.HeshamFouadAPI.createOrder({
-          customerName: name,
-          customerPhone: cleanPhone,
-          deliveryAddress: address,
-          mapLocation,
-          notes,
-          items: cart.map(i => ({
-            itemId: i.itemId,
-            name: i.name,
-            quantity: i.quantity,
-            unitPrice: i.unitPrice,
-            selectedAddons: i.selectedAddons || [],
-            selectedSauces: i.selectedSauces || [],
-            notes: i.notes || ''
-          }))
-        });
-
-        if (apiRes && apiRes.success && apiRes.order) {
-          // Clear Cart
-          window.HeshamFouadCart.clearCart();
-
-          // Display Confirmation View
-          const cartGrid = document.querySelector('.cart-grid');
-          const titleBlock = document.querySelector('.menu-title-block');
-          const confirmCard = document.getElementById('orderConfirmation');
-          const orderNumEl = document.getElementById('confirmOrderNum');
-
-          if (cartGrid) cartGrid.style.display = 'none';
-          if (titleBlock) titleBlock.style.display = 'none';
-          if (orderNumEl) orderNumEl.textContent = `#${apiRes.order.orderNumber}`;
-          if (confirmCard) {
-            confirmCard.style.display = 'block';
-            confirmCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (window.HeshamFouadAPI && window.HeshamFouadAPI.isLoggedIn()) {
+          const apiPromise = window.HeshamFouadAPI.createOrder({
+            customerName: name,
+            customerPhone: cleanPhone,
+            deliveryAddress: address,
+            mapLocation,
+            notes,
+            items: cart.map(i => ({
+              itemId: i.itemId,
+              name: i.name,
+              quantity: i.quantity,
+              unitPrice: i.unitPrice,
+              selectedAddons: i.selectedAddons || [],
+              selectedSauces: i.selectedSauces || [],
+              notes: i.notes || ''
+            }))
+          }).catch(err => {
+            console.warn('Background sync note:', err);
+            return null;
+          });
+          const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(null), 500));
+          const apiRes = await Promise.race([apiPromise, timeoutPromise]);
+          if (apiRes && apiRes.order && apiRes.order.orderNumber) {
+            orderNumber = apiRes.order.orderNumber;
           }
-        } else {
-          throw new Error(apiRes.message || 'حدث خطأ في استلام الطلب من السيرفر');
         }
       } catch (err) {
-        console.error('Submit order error:', err);
-        alert(err.message || 'حدث خطأ أثناء إرسال الطلب. تأكد من اتصال الإنترنت وحاول مجدداً.');
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.querySelector('.btn-text').style.display = 'inline-flex';
-          submitBtn.querySelector('.btn-loading').style.display = 'none';
-        }
-      }
-    }
-
-    /* ---- 2. WhatsApp Order Checkout ---- */
-    async function submitWhatsAppOrder() {
-      // 1. Strict Guest Ordering Prevention
-      if (!window.HeshamFouadAPI || !window.HeshamFouadAPI.isLoggedIn()) {
-        alert('عفواً، لا يمكن إتمام الطلب كزائر!\nيجب تسجيل الدخول أو إنشاء حساب جديد لضمان بياناتك وتوصيل طلبك.');
-        window.location.href = 'auth.html?returnTo=cart.html';
-        return;
+        console.warn('Background order registration note:', err);
       }
 
-      const cart = window.HeshamFouadCart.getCart();
-      if (cart.length === 0) {
-        alert('سلة المشتريات فارغة! يرجى اختيار الأصناف أولاً من المنيو.');
-        return;
-      }
+      // Generate the official WhatsApp receipt link
+      const customerInfo = { name, phone: cleanPhone, address, notes, mapLocation, orderNumber };
+      const whatsappUrl = window.HeshamFouadCart.formatWhatsAppOrder(customerInfo);
 
-      const name = document.getElementById('cust-name').value.trim();
-      const phone = document.getElementById('cust-phone').value.trim();
-      const address = document.getElementById('cust-address').value.trim();
-      const notes = document.getElementById('cust-notes').value.trim();
-      const mapLocation = document.getElementById('cust-map-location') ? document.getElementById('cust-map-location').value.trim() : '';
-
-      if (!name || name.length < 3) {
-        alert('من فضلك ادخل الاسم بالكامل ثلاثي.');
-        document.getElementById('cust-name').focus();
-        return;
-      }
-
-      const cleanPhone = phone.replace(/[\s-]/g, '');
-      if (!cleanPhone || !/^01[0125][0-9]{8}$/.test(cleanPhone)) {
-        alert('من فضلك ادخل رقم موبايل مصري صحيح مكون من 11 رقماً يبدأ بـ 01.');
-        document.getElementById('cust-phone').focus();
-        return;
-      }
-
-      if (!address || address.length < 5) {
-        alert('من فضلك ادخل عنوان التوصيل بالتفصيل بأسيوط (الشارع، رقم العمارة، الشقة).');
-        document.getElementById('cust-address').focus();
-        return;
-      }
-
-      const submitBtn = document.getElementById('btnWhatsAppOrder');
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>جاري حفظ الطلب بالسيستم...</span>';
-      }
-
-      let orderNumber = '';
-
-      // Register in DB first so it enters cashier dashboard
-      try {
-        const apiRes = await window.HeshamFouadAPI.createOrder({
-          customerName: name,
-          customerPhone: cleanPhone,
-          deliveryAddress: address,
-          mapLocation,
-          notes,
-          items: cart.map(i => ({
-            itemId: i.itemId,
-            name: i.name,
-            quantity: i.quantity,
-            unitPrice: i.unitPrice,
-            selectedAddons: i.selectedAddons || [],
-            selectedSauces: i.selectedSauces || [],
-            notes: i.notes || ''
-          }))
-        });
-
-        if (apiRes && apiRes.order && apiRes.order.orderNumber) {
-          orderNumber = apiRes.order.orderNumber;
-        }
-      } catch (err) {
-        console.error('Error saving order to DB before WhatsApp:', err);
-      }
-
-      // Prepare official WhatsApp message with verified order number
-      const customerInfo = { name, phone: cleanPhone, address, notes, mapLocation };
-      let url = window.HeshamFouadCart.formatWhatsAppOrder(customerInfo);
-      if (orderNumber) {
-        url += encodeURIComponent(`\n*رقم الأوردر المعتمد بالسيستم:* #${orderNumber}`);
-      }
-      if (mapLocation) {
-        url += encodeURIComponent(`\n*الموقع بالـ GPS:* ${mapLocation}`);
-      }
-
-      // Clear cart
+      // Clear the Cart
       window.HeshamFouadCart.clearCart();
 
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fab fa-whatsapp" style="font-size: 1.25rem;"></i> <span>إرسال الطلب عبر واتساب</span>';
+      // Display the Order Confirmation Card on screen
+      const cartGrid = document.querySelector('.cart-grid');
+      const titleBlock = document.querySelector('.menu-title-block');
+      const confirmCard = document.getElementById('orderConfirmation');
+      const orderNumEl = document.getElementById('confirmOrderNum');
+      const confirmWaBtn = document.getElementById('confirmWaDirectBtn');
+
+      if (cartGrid) cartGrid.style.display = 'none';
+      if (titleBlock) titleBlock.style.display = 'none';
+      if (orderNumEl) orderNumEl.textContent = `#${orderNumber}`;
+      if (confirmWaBtn) confirmWaBtn.href = whatsappUrl;
+
+      if (confirmCard) {
+        confirmCard.style.display = 'block';
+        confirmCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
 
-      // Open WhatsApp and redirect to orders
-      window.open(url, '_blank');
-      window.location.href = 'orders.html';
+      // Automatically launch WhatsApp directly on customer's phone!
+      setTimeout(() => {
+        window.location.href = whatsappUrl;
+      }, 400);
+    }
+
+    function submitWhatsAppOrder() {
+      return submitOnlineOrder();
     }
   </script>
+
+  <!-- Mobile App Bottom Navigation Bar -->
+  <nav class="mobile-bottom-nav" aria-label="شريط الملاحة لتطبيق الموبايل">
+    <a href="index.html" class="mobile-nav-item">
+      <i class="fas fa-home"></i>
+      <span>الرئيسية</span>
+    </a>
+    <a href="menu.html" class="mobile-nav-item">
+      <i class="fas fa-utensils"></i>
+      <span>المنيو</span>
+    </a>
+    <a href="cart.html" class="mobile-nav-item active">
+      <i class="fas fa-shopping-bag"></i>
+      <span class="mobile-nav-cart-badge" style="display:none;">0</span>
+      <span>السلة</span>
+    </a>
+    <a href="orders.html" class="mobile-nav-item">
+      <i class="fas fa-receipt"></i>
+      <span>طلباتي</span>
+    </a>
+  </nav>
+
+  <!-- PWA Client Controller -->
+  <script src="js/pwa.js"></script>
 </body>
 </html>

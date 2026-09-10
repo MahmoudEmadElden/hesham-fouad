@@ -1,3 +1,7 @@
+/**
+ * MongoDB Connection Utility (Cached for Vercel Serverless)
+ * Connects to isolated database for Hesham Fouad.
+ */
 const mongoose = require('mongoose');
 const dns = require('dns');
 

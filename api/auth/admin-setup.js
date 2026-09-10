@@ -1,3 +1,6 @@
+/**
+ * POST /api/auth/admin-setup — Initialize or reset admin account
+ */
 const bcrypt = require('bcryptjs');
 const { connectDB } = require('../_lib/db');
 const User = require('../_lib/models/User');
@@ -13,8 +16,8 @@ module.exports = async function handler(req, res) {
   try {
     const { setupSecret, username, password } = req.body;
 
-    const expectedSecret = process.env.SETUP_SECRET || 'setup_hesham_fouad_secret_2026';
-    if (!setupSecret || setupSecret !== expectedSecret) {
+    const expectedSecret = process.env.SETUP_SECRET;
+    if (!expectedSecret || !setupSecret || setupSecret !== expectedSecret) {
       return res.status(403).json({ success: false, message: 'كود الإعداد غير صحيح' });
     }
 

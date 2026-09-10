@@ -1,3 +1,6 @@
+/**
+ * POST /api/auth/change-password — Change password for both customers and admin
+ */
 const bcrypt = require('bcryptjs');
 const { connectDB } = require('../_lib/db');
 const User = require('../_lib/models/User');

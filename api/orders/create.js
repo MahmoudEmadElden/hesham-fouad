@@ -1,94 +1,36 @@
 /**
  * POST /api/orders/create
  * Secure order creation for Hesham Fouad.
+ * Prices are derived from the single source of truth (js/menuData.js)
+ * to guarantee every item id matches the client-side menu.
  */
+const path = require('path');
 const { connectDB } = require('../_lib/db');
 const { verifyToken, handleCors } = require('../_lib/auth-middleware');
 const Order = require('../_lib/models/Order');
 const Counter = require('../_lib/models/Counter');
 const User = require('../_lib/models/User');
 
-// Official Hesham Fouad Item Price Map
-const PRICE_MAP = {
-  // Signatures & Mixes
-  'hf-beast': 150,
-  'hf-toscanini': 135,
-  'hf-milano': 130,
-  'hf-moscow': 130,
-  'hf-chicago': 130,
-  'hf-super-supreme': 130,
-  'hf-amsterdam': 125,
-  'hf-sofia': 125,
-  'hf-sojouk-kiri': 120,
-  'hf-mix-chicken': 120,
-  'hf-mix-smoked': 120,
-  'hf-super-crunchy': 115,
+const menuData = require(path.resolve(__dirname, '../../js/menuData.js'));
 
-  // Chicken
-  'chk-ranch': 120,
-  'chk-bbq': 120,
-  'chk-shish': 115,
-  'chk-fajita': 115,
-  'chk-grilled-breast': 115,
-  'chk-shawarma': 105,
-  'chk-cordon-bleu': 105,
-  'chk-zinger': 95,
-  'chk-strips': 95,
-  'chk-pane': 95,
-  'chk-nuggets': 95,
+const PRICE_MAP = {};
+menuData.menuItems.forEach(item => {
+  PRICE_MAP[item.id] = Number(item.price) || 0;
+});
 
-  // Meat
-  'meat-steak': 120,
-  'meat-burger': 105,
-  'meat-salami': 100,
-  'meat-pastrami': 100,
-  'meat-sojouk': 95,
-  'meat-kofta': 95,
-  'meat-sausage': 90,
-  'meat-hotdog': 90,
+const ADDON_MAP = {};
+menuData.extraAddons.forEach(a => { ADDON_MAP[a.id] = Number(a.price) || 0; });
+menuData.extraSauces.forEach(s => { ADDON_MAP[s.id] = Number(s.price) || 0; });
+menuData.sweetSauces.forEach(s => { ADDON_MAP[s.id] = Number(s.price) || 0; });
 
-  // Fries & Cheese
-  'side-mix-cheese': 80,
-  'side-fries': 60,
+const DELIVERY_FEE = Number(menuData.restaurantInfo.deliveryFee) || 15;
+const MIN_ORDER = Number(menuData.restaurantInfo.minOrder) || 0;
 
-  // Sweet
-  'swt-nutella-oreo': 105,
-  'swt-nutella': 100,
-  'swt-lotus': 90,
-  'swt-pistachio': 90,
-  'swt-kinder': 90,
-  'swt-white-choc': 90,
-  'swt-apple': 120,
-  'swt-mango': 120,
-  'swt-pineapple': 120,
-  'swt-peach': 115,
-  'swt-banana': 115,
-  'swt-jam': 80
-};
-
-// Addons & Sauces Price Map
-const ADDON_MAP = {
-  'extra-romi': 20,
-  'extra-mozzarella': 20,
-  'extra-mix-cheese': 20,
-  'extra-fries': 20,
-  'extra-jalapeno': 20,
-  'extra-crepe-bread': 25,
-  'sauce-ranch': 25,
-  'sauce-cheddar': 25,
-  'sauce-thousand-island': 20,
-  'sauce-bbq': 20,
-  'sauce-sweet-chili': 20,
-  'sauce-cocktail': 20,
-  'sauce-big-tasty': 20,
-  'sauce-harissa': 20,
-  'sweet-nutella': 30,
-  'sweet-kinder': 30,
-  'sweet-pistachio': 30,
-  'sweet-lotus': 30,
-  'sweet-white-choc': 30,
-  'sweet-jam': 25
-};
+function resolveItemId(itemId) {
+  if (!itemId) return '';
+  if (PRICE_MAP[itemId]) return itemId;
+  return itemId;
+}
 
 module.exports = async function handler(req, res) {
   if (handleCors(req, res)) return;
@@ -98,7 +40,6 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // 1. Mandatory Customer Authentication
     const decoded = verifyToken(req.headers.authorization);
     await connectDB();
 
@@ -131,8 +72,8 @@ module.exports = async function handler(req, res) {
     const validatedItems = [];
 
     for (const item of items) {
-      // Map both short and full IDs
-      const basePrice = PRICE_MAP[item.itemId] || PRICE_MAP[item.itemId?.replace('hesham-fouad-signature', 'hf-beast')] || 0;
+      const resolvedId = resolveItemId(item.itemId);
+      const basePrice = PRICE_MAP[resolvedId];
       if (!basePrice) {
         return res.status(400).json({ success: false, message: `الصنف ${item.name || item.itemId} غير صالح أو غير مسجل في قائمة الأسعار` });
       }
@@ -141,7 +82,10 @@ module.exports = async function handler(req, res) {
       const validatedAddons = [];
       if (Array.isArray(item.selectedAddons)) {
         for (const addon of item.selectedAddons) {
-          const aPrice = ADDON_MAP[addon.id] || Number(addon.price) || 0;
+          const aPrice = ADDON_MAP[addon.id] || 0;
+          if (aPrice === 0) {
+            return res.status(400).json({ success: false, message: `إضافة ${addon.name || addon.id} غير صالحة` });
+          }
           addonsSum += aPrice;
           validatedAddons.push({
             id: addon.id,
@@ -154,7 +98,10 @@ module.exports = async function handler(req, res) {
       const validatedSauces = [];
       if (Array.isArray(item.selectedSauces)) {
         for (const sauce of item.selectedSauces) {
-          const sPrice = ADDON_MAP[sauce.id] || Number(sauce.price) || 0;
+          const sPrice = ADDON_MAP[sauce.id] || 0;
+          if (sPrice === 0) {
+            return res.status(400).json({ success: false, message: `صوص ${sauce.name || sauce.id} غير صالح` });
+          }
           addonsSum += sPrice;
           validatedSauces.push({
             id: sauce.id,
@@ -170,7 +117,7 @@ module.exports = async function handler(req, res) {
       subtotal += totalPrice;
 
       validatedItems.push({
-        itemId: item.itemId,
+        itemId: resolvedId,
         name: item.name || 'كريب فاخر',
         quantity: qty,
         unitPrice,
@@ -181,10 +128,15 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    const deliveryFee = 15;
-    const totalAmount = subtotal + deliveryFee;
+    if (MIN_ORDER > 0 && subtotal < MIN_ORDER) {
+      return res.status(400).json({
+        success: false,
+        message: `الحد الأدنى للطلب هو ${MIN_ORDER} ج.م. المجموع الحالي هو ${subtotal} ج.م`
+      });
+    }
 
-    // Get next order number
+    const totalAmount = subtotal + DELIVERY_FEE;
+
     const orderNumber = await Counter.getNextSequence('orderNumber');
 
     const order = new Order({
@@ -196,7 +148,7 @@ module.exports = async function handler(req, res) {
       mapLocation: mapLocation ? mapLocation.trim() : '',
       items: validatedItems,
       subtotal,
-      deliveryFee,
+      deliveryFee: DELIVERY_FEE,
       totalAmount,
       status: 'pending',
       notes: notes ? notes.trim() : ''

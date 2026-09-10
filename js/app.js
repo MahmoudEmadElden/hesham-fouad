@@ -207,6 +207,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (zeroResultsBox) zeroResultsBox.style.display = 'none';
     }
 
+    // Category fallback images
+    const fallbackCategoryImages = {
+      signature: 'assets/images/hesham-holding-crepe.png',
+      chicken: 'assets/images/crunchy-chicken-cheese.png',
+      meat: 'assets/images/trio-crepe.png',
+      fries: 'assets/images/crepe-cross-section.png',
+      sweet: 'assets/images/crepe-varieties.png',
+      sauces: 'assets/images/crepe-cone-loaded.png'
+    };
+
     // Category dictionary for badges
     const catMap = {
       signature: { name: 'ميكس الوحش', icon: 'fa-crown', color: '#F5A623' },
@@ -221,16 +231,22 @@ document.addEventListener('DOMContentLoaded', () => {
     menuGrid.innerHTML = filtered.map(item => {
       const catInfo = catMap[item.categoryId] || { name: 'كريب فاخر', icon: 'fa-utensils', color: '#0A748A' };
       const isSignature = item.isSignature || item.popular;
+      const cardImage = item.image || fallbackCategoryImages[item.categoryId] || 'assets/images/crispy-chicken-crepe.png';
 
       return `
         <div class="menu-bistro-card ${isSignature ? 'is-signature-card' : ''}" data-item-id="${item.id}">
           
-          <!-- Card Header & Badge -->
-          <div class="bistro-card-header">
-            <span class="bistro-card-badge" style="border-color: ${catInfo.color}; color: ${catInfo.color};">
-              <i class="fas ${catInfo.icon}"></i> ${catInfo.name}
-            </span>
-            ${item.tags && item.tags.length > 0 ? `<span class="bistro-mini-tag">${item.tags[0]}</span>` : ''}
+          <!-- Food Image Showcase with Floating Badges -->
+          <div class="bistro-card-media" onclick="window.HeshamFouadApp.openCustomizer('${item.id}')" title="اضغط للتفاصيل والإضافة">
+            <img src="${cardImage}" alt="${item.name}" loading="lazy" class="bistro-card-img" onerror="this.onerror=null;this.src='assets/images/crispy-chicken-crepe.png';">
+            <div class="bistro-card-media-overlay"></div>
+            <div class="bistro-card-badges-float">
+              <span class="bistro-card-badge" style="border-color: ${catInfo.color}; color: ${catInfo.color};">
+                <i class="fas ${catInfo.icon}"></i> ${catInfo.name}
+              </span>
+              ${item.tags && item.tags.length > 0 ? `<span class="bistro-mini-tag">${item.tags[0]}</span>` : ''}
+            </div>
+            ${isSignature ? `<div class="bistro-signature-crown"><i class="fas fa-crown"></i> <span>الأكثر طلباً</span></div>` : ''}
           </div>
 
           <!-- Title & Description -->

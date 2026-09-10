@@ -1,3 +1,6 @@
+/**
+ * GET /api/auth/me — Check current logged in user
+ */
 const { connectDB } = require('../_lib/db');
 const User = require('../_lib/models/User');
 const { verifyToken, handleCors } = require('../_lib/auth-middleware');
